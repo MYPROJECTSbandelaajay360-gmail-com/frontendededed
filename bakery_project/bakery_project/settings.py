@@ -177,3 +177,9 @@ CORS_ALLOW_ALL_ORIGINS = True  # For development only
 # ]
 BAKERY_BUSINESS_ADDRESS = 'Chaitanyapuri, Dilsukhnagar, Hyderabad'
 BAKERY_BUSINESS_EMAIL = 'btechmuthyam@gmail.com'
+
+
+DEBUG=False
+# SECRET_KEY=your-super-secret-key
+# ALLOWED_HOSTS = ["3.108.223.162", "localhost"]
+# Add other keys as needed (Razorpay, AWS, etc.)

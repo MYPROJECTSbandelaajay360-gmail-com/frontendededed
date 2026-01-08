@@ -1,0 +1,764 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Premium Café</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0F4C3A;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #0F4C3A;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #B8935E 0%, #A67C52 100%);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bot-icon {
+            width: 36px;
+            height: 36px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #0F4C3A;
+            font-weight: 600;
+        }
+
+        .header-title {
+            font-size: 15px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-icon {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #0F4C3A;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            display: flex;
+            gap: 8px;
+            animation: slideIn 0.3s ease-out;
+            align-items: flex-start;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 85%;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            color: #333;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-content {
+            background: #B8935E;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.bot .message-content {
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .message-image {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 8px 0;
+            display: block;
+        }
+
+        .user-badge {
+            background: #B8935E;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            align-self: flex-end;
+            margin: 4px 0;
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .action-button {
+            background: transparent;
+            border: 2px solid #B8935E;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: white;
+            text-align: left;
+        }
+
+        .action-button:hover {
+            background: #B8935E;
+            transform: translateY(-2px);
+        }
+
+        .action-button .icon {
+            font-size: 18px;
+        }
+
+        .food-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .food-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .food-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .food-card-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+
+        .food-card-content {
+            padding: 12px;
+        }
+
+        .food-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .food-card-price {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .select-btn {
+            background: #0F4C3A;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .select-btn:hover {
+            background: #1a6b52;
+        }
+
+        .delivery-image-container {
+            background: #C8E6DC;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 12px 0;
+            text-align: center;
+        }
+
+        .delivery-illustration {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #B8935E;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 12px 16px;
+            background: #0F4C3A;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            outline: none;
+            color: #333;
+        }
+
+        #messageInput::placeholder {
+            color: #999;
+        }
+
+        .send-btn {
+            background: #B8935E;
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+            background: #A67C52;
+        }
+
+        .cart-summary {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 12px 0;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .qty-btn {
+            background: #0F4C3A;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-display {
+            font-size: 18px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                max-width: 100%;
+            }
+
+            .food-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="bot-icon">≡</div>
+                <div class="header-title">AI ⚡ TARS</div>
+            </div>
+            <div class="header-actions">
+                <button class="action-icon" onclick="toggleSound()">🔇</button>
+                <button class="action-icon" onclick="showMenu()">⋮</button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be added here dynamically -->
+        </div>
+
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Choose from above..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tableNumber = "{{ table_number|default:'' }}";
+        let conversationState = 'init';
+        let orderData = {
+            items: [],
+            total: 0
+        };
+        let currentItem = null;
+        let isTyping = false;
+
+        // Menu items data
+        const menuItems = {
+            breakfast: [
+                { id: 1, name: 'Healthy Breakfast', price: 15.99, image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400' },
+                { id: 2, name: 'Warm Bruschettas Funghi', price: 12.99, image: 'https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=400' },
+                { id: 3, name: 'Classic Pancakes', price: 10.99, image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400' },
+                { id: 4, name: 'Avocado Toast', price: 11.99, image: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400' }
+            ],
+            food: [
+                { id: 5, name: 'Margherita Pizza', price: 18.99, image: 'https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=400' },
+                { id: 6, name: 'Pasta Carbonara', price: 16.99, image: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400' },
+                { id: 7, name: 'Chicken Salad', price: 14.99, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400' },
+                { id: 8, name: 'Beef Burger', price: 15.99, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400' }
+            ]
+        };
+
+        // Initialize chat
+        window.onload = function() {
+            setTimeout(() => {
+                addBotMessage("Hello! Welcome to Cafe Di Roma ☕");
+            }, 500);
+
+            setTimeout(() => {
+                const coffeeImg = "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400";
+                addBotMessage(`<img src="${coffeeImg}" class="message-image" alt="Coffee">`);
+            }, 1500);
+
+            setTimeout(() => {
+                addBotMessage("We have been making coffee with real passion for over 110 years, bringing Italian espresso culture to the world with our experience, innovation and creativity.");
+            }, 2500);
+
+            setTimeout(() => {
+                addBotMessage("What would you like to order today? 😊");
+                showMainMenu();
+            }, 3500);
+        };
+
+        function addBotMessage(text, isHtml = false) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${isHtml ? text : escapeHtml(text)}
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addUserMessage(text) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(text)}</div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addUserBadge(text) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const badgeDiv = document.createElement('div');
+            badgeDiv.className = 'user-badge';
+            badgeDiv.textContent = text;
+            messagesDiv.appendChild(badgeDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showMainMenu() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="button-group">
+                        <button class="action-button" onclick="showCategory('breakfast')">
+                            <span class="icon">☕</span>
+                            <span>Beverages</span>
+                        </button>
+                        <button class="action-button" onclick="showCategory('food')">
+                            <span class="icon">🍽️</span>
+                            <span>Food</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showCategory(category) {
+            conversationState = 'browsing_menu';
+            
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addBotMessage("Which one would you like to go for? 👇");
+                
+                const messagesDiv = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                
+                const items = menuItems[category];
+                let cardsHTML = '<div class="food-cards">';
+                
+                items.forEach(item => {
+                    cardsHTML += `
+                        <div class="food-card" onclick="selectItem(${item.id})">
+                            <img src="${item.image}" class="food-card-image" alt="${item.name}">
+                            <div class="food-card-content">
+                                <div class="food-card-name">${item.name}</div>
+                                <div class="food-card-price">$${item.price}</div>
+                                <button class="select-btn" onclick="selectItem(${item.id}); event.stopPropagation();">SELECT</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                cardsHTML += '</div>';
+                
+                messageDiv.innerHTML = `<div class="message-content">${cardsHTML}</div>`;
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 1000);
+        }
+
+        function selectItem(itemId) {
+            const item = [...menuItems.breakfast, ...menuItems.food].find(i => i.id === itemId);
+            if (!item) return;
+            
+            currentItem = item;
+            addUserMessage(`Selected: ${item.name}`);
+            
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                addBotMessage("Got it. Let me just take your info 😊");
+                setTimeout(() => {
+                    addBotMessage("First up, what's your name?");
+                    conversationState = 'awaiting_name';
+                }, 1000);
+            }, 1000);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addUserMessage(message);
+            addUserBadge(message);
+            input.value = '';
+            
+            handleConversationFlow(message);
+        }
+
+        function handleConversationFlow(message) {
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                
+                if (conversationState === 'awaiting_name') {
+                    orderData.name = message;
+                    addBotMessage("Your mobile number? 📱");
+                    conversationState = 'awaiting_phone';
+                } else if (conversationState === 'awaiting_phone') {
+                    orderData.phone = message;
+                    addBotMessage("Finally please share your delivery address. 🏠");
+                    
+                    // Show delivery illustration
+                    setTimeout(() => {
+                        const messagesDiv = document.getElementById('chatMessages');
+                        const illustrationDiv = document.createElement('div');
+                        illustrationDiv.className = 'message bot';
+                        illustrationDiv.innerHTML = `
+                            <div class="message-content">
+                                <div class="delivery-image-container">
+                                    <svg class="delivery-illustration" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0" y="140" width="400" height="60" fill="#8B7355"/>
+                                        <line x1="50" y1="140" x2="350" y2="140" stroke="white" stroke-width="4" stroke-dasharray="20,10"/>
+                                        <rect x="240" y="80" width="80" height="60" fill="#D4A574"/>
+                                        <rect x="250" y="60" width="60" height="20" fill="#8B6F47"/>
+                                        <rect x="260" y="90" width="15" height="20" fill="#5C4033"/>
+                                        <rect x="290" y="90" width="15" height="20" fill="#5C4033"/>
+                                        <rect x="268" y="65" width="34" height="10" fill="#6B5D4F"/>
+                                        <circle cx="100" cy="120" r="40" fill="#8FBC8F"/>
+                                        <circle cx="100" cy="100" r="50" fill="#9ACD32"/>
+                                        <rect x="95" y="60" width="10" height="60" fill="#8B7355"/>
+                                        <circle cx="180" cy="135" r="12" fill="#333"/>
+                                        <circle cx="210" cy="135" r="12" fill="#333"/>
+                                        <rect x="150" y="120" width="80" height="30" fill="#FF6347" rx="5"/>
+                                        <circle cx="165" cy="135" r="4" fill="#FFD700"/>
+                                        <circle cx="180" cy="135" r="4" fill="#FFD700"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        `;
+                        messagesDiv.appendChild(illustrationDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    }, 500);
+                    
+                    setTimeout(() => {
+                        addBotMessage("Press ✅ when you are done");
+                        conversationState = 'awaiting_address';
+                    }, 1500);
+                } else if (conversationState === 'awaiting_address') {
+                    orderData.address = message;
+                    
+                    // Show order summary
+                    showOrderSummary();
+                    
+                    setTimeout(() => {
+                        addBotMessage("Your order has been placed successfully! 🎉");
+                        setTimeout(() => {
+                            addBotMessage('"You don\'t need a silver fork to eat good food". 😋');
+                            conversationState = 'completed';
+                        }, 1500);
+                    }, 1000);
+                } else {
+                    // Default response
+                    addBotMessage("I'm here to help you order delicious food! Please select from the menu above.");
+                }
+            }, 1000);
+        }
+
+        function showOrderSummary() {
+            if (!currentItem) return;
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'message bot';
+            
+            summaryDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="cart-summary">
+                        <div style="font-weight: 600; margin-bottom: 12px; font-size: 16px;">Order Summary</div>
+                        <div class="cart-item">
+                            <span>${currentItem.name}</span>
+                            <span>$${currentItem.price}</span>
+                        </div>
+                        <div class="cart-item">
+                            <span>Delivery Fee</span>
+                            <span>$2.00</span>
+                        </div>
+                        <div class="cart-total">
+                            <span>Total</span>
+                            <span>$${(currentItem.price + 2).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(summaryDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            if (isTyping) return;
+            isTyping = true;
+            
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTyping() {
+            isTyping = false;
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function toggleSound() {
+            console.log('Sound toggled');
+        }
+
+        function showMenu() {
+            console.log('Menu opened');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.getElementById('messageInput').focus();
+    </script>
+</body>
+</html>

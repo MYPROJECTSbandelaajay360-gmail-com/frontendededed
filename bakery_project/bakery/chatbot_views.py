@@ -8,6 +8,7 @@ from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils import timezone
 import os
 import json
 import razorpay
@@ -24,8 +25,16 @@ from django.db import models
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Initialize Razorpay client
-razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+# Initialize Razorpay client with validation
+RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID or os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET or os.getenv('RAZORPAY_KEY_SECRET')
+
+if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+    print("⚠️ WARNING: Razorpay credentials not configured!")
+    razorpay_client = None
+else:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    print(f"✅ Razorpay client initialized with Key ID: {RAZORPAY_KEY_ID}")
 
 # Initialize chatbot globally (so it persists across requests)
 chatbot_instance = None
@@ -329,6 +338,13 @@ def chatbot_order_create(request):
     Body: {"session_id": "..."}
     """
     try:
+        # Check if Razorpay is configured
+        if razorpay_client is None:
+            return Response({
+                "success": False,
+                "message": "Payment system is not configured. Please contact support."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
         session_id = request.data.get('session_id')
         
         if not session_id or session_id not in order_sessions:
@@ -339,19 +355,22 @@ def chatbot_order_create(request):
         
         session_data = order_sessions[session_id]
         
-        # Get or create user
-        if session_data.get('user_id'):
-            user = User.objects.get(id=session_data['user_id'])
-        elif request.user.is_authenticated:
+        # Get or create user - prioritize authenticated user
+        if request.user.is_authenticated:
             user = request.user
+            print(f"✅ Using authenticated user: {user.username}")
+        elif session_data.get('user_id'):
+            user = User.objects.get(id=session_data['user_id'])
+            print(f"✅ Using session user: {user.username}")
         else:
-            # Create guest user
+            # Create guest user only if not authenticated
             import uuid
             guest_username = f"guest_{uuid.uuid4().hex[:8]}"
             user = User.objects.create_user(
                 username=guest_username,
                 email=f"{guest_username}@guest.com"
             )
+            print(f"⚠️ Created guest user: {guest_username}")
         
         # Generate order ID
         import random
@@ -430,45 +449,106 @@ def chatbot_order_payment_verify(request):
         "razorpay_signature": "..."
     }
     """
+    import traceback
+    
     try:
+        # Check if Razorpay is configured
+        if razorpay_client is None:
+            return Response({
+                "success": False,
+                "message": "Payment system is not configured. Please contact support."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
         razorpay_order_id = request.data.get('razorpay_order_id')
         razorpay_payment_id = request.data.get('razorpay_payment_id')
         razorpay_signature = request.data.get('razorpay_signature')
         
+        print(f"\n=== Payment Verification Request ===")
+        print(f"Order ID: {razorpay_order_id}")
+        print(f"Payment ID: {razorpay_payment_id}")
+        print(f"Signature: {razorpay_signature[:20] if razorpay_signature else 'None'}...")
+        print(f"Razorpay Key ID: {RAZORPAY_KEY_ID}")
+        
+        # Validate required fields
+        if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+            return Response({
+                "success": False,
+                "message": "Missing payment verification data. Please try again."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find order first (before verification)
+        try:
+            order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+            print(f"Order found: {order.order_id} - Status: {order.status}")
+        except Order.DoesNotExist:
+            print(f"❌ Order not found for Razorpay Order ID: {razorpay_order_id}")
+            return Response({
+                "success": False,
+                "message": "Order not found. Please contact support."
+            }, status=status.HTTP_404_NOT_FOUND)
+        
         # Verify signature
         try:
-            razorpay_client.utility.verify_payment_signature({
+            params_dict = {
                 'razorpay_order_id': razorpay_order_id,
                 'razorpay_payment_id': razorpay_payment_id,
                 'razorpay_signature': razorpay_signature
-            })
+            }
+            razorpay_client.utility.verify_payment_signature(params_dict)
+            print("✅ Payment signature verified successfully!")
+            
+        except razorpay.errors.SignatureVerificationError as verify_error:
+            print(f"❌ Signature Verification Failed: {str(verify_error)}")
+            print(traceback.format_exc())
+            
+            # Still mark payment as pending for manual verification
+            order.status = 'pending'
+            order.save()
+            
+            return Response({
+                "success": False,
+                "message": "Payment signature verification failed. Your payment may have been processed. Please contact support with your payment details.",
+                "error": "Signature verification failed",
+                "order_id": order.order_id
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
         except Exception as verify_error:
-            import traceback
-            print("Payment verification error:")
+            print(f"❌ Unexpected verification error: {str(verify_error)}")
             print(traceback.format_exc())
             return Response({
                 "success": False,
-                "message": "Payment verification failed. Please contact support.",
+                "message": "Payment verification error. Please contact support.",
                 "error": str(verify_error)
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Find order
-        order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Update order status
         order.status = 'confirmed'
-        order.confirmed_at = datetime.now()
+        order.confirmed_at = timezone.now()
         order.save()
+        print(f"✅ Order {order.order_id} confirmed")
         
-        # Create payment record
-        Payment.objects.create(
+        # Create or update payment record
+        payment, created = Payment.objects.get_or_create(
             order=order,
-            payment_method='card',  # or detect from razorpay
-            amount=order.grand_total,
-            status='completed',
-            transaction_id=razorpay_payment_id,
-            payment_screenshot=''
+            defaults={
+                'payment_method': 'online',
+                'amount': order.grand_total,
+                'payment_status': 'completed',
+                'transaction_id': razorpay_payment_id,
+                'payment_screenshot': ''
+            }
         )
+        
+        if not created:
+            payment.payment_status = 'completed'
+            payment.transaction_id = razorpay_payment_id
+            payment.paid_at = timezone.now()
+            payment.save()
+            print(f"✅ Payment record updated")
+        else:
+            payment.paid_at = timezone.now()
+            payment.save()
+            print(f"✅ Payment record created")
         
         return Response({
             "success": True,
@@ -484,18 +564,14 @@ def chatbot_order_payment_verify(request):
             }
         })
         
-    except Order.DoesNotExist:
+    except Exception as e:
+        print(f"❌ Unexpected error in payment verification: {str(e)}")
+        print(traceback.format_exc())
         return Response({
             "success": False,
-            "message": "Order not found."
-        }, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        import traceback
-        print(traceback.format_exc())
-        return Response(
-            {"error": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+            "message": "An error occurred while processing your payment. Please contact support.",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])

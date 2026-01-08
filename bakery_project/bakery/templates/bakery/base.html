@@ -1320,6 +1320,9 @@
             typingIndicator.classList.add('active');
             
             try {
+                console.log('Verifying payment:', paymentData);
+                console.log('CSRF Token:', csrftoken);
+                
                 const response = await fetch('/api/chatbot/order/payment/verify/', {
                     method: 'POST',
                     headers: {
@@ -1333,10 +1336,28 @@
                     })
                 });
                 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                // Try to parse JSON response
+                let data;
+                try {
+                    const responseText = await response.text();
+                    console.log('Response text:', responseText);
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    typingIndicator.classList.remove('active');
+                    addMessage('bot', '❌ Invalid response from server. Please contact support.');
+                    return;
+                }
+                
                 typingIndicator.classList.remove('active');
                 
-                if (data.success) {
+                console.log('Payment verification response:', data);
+                
+                // Check if payment was successful
+                if (response.ok && data.success) {
                     addMessage('bot', data.message);
                     addMessage('bot', `🎉 Order ID: ${data.order_id}\n⏱️ Estimated Delivery: ${data.estimated_delivery}\n\nThank you for ordering from The Bake Story! Your delicious treats are on the way! 🍰`);
                     
@@ -1349,12 +1370,23 @@
                         addOrderTrackingButton(data.order_id);
                     }, 1000);
                 } else {
-                    addMessage('bot', data.message || 'Payment verification failed. Please contact support.');
+                    // Payment verification failed
+                    const errorMsg = data.message || 'Payment verification failed. Please contact support.';
+                    addMessage('bot', '❌ ' + errorMsg);
+                    
+                    // If we have an order ID, show it
+                    if (data.order_id) {
+                        addMessage('bot', `Your order ID is: ${data.order_id}. Please save this for reference.`);
+                    }
+                    
+                    console.error('Payment verification failed:', data);
                 }
                 
             } catch (error) {
                 typingIndicator.classList.remove('active');
-                addMessage('bot', 'Error verifying payment. Please contact support with your payment details.');
+                console.error('Error verifying payment:', error);
+                console.error('Error details:', error.message, error.stack);
+                addMessage('bot', '❌ An error occurred while processing your payment. Please contact support.');
             } finally {
                 scrollToBottom();
             }

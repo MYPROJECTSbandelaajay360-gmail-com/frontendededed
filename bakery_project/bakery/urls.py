@@ -17,6 +17,11 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
-    path('bot/', views.chatbot_view, name='chatbot'),  # Chatbot page
-   
+    path('bot/', views.chatbot_view, name='chatbot'),  # Old chatbot page
+    
+    # New Premium Café URLs
+    path('qr-landing/', views.qr_landing_view, name='qr_landing'),
+    path('order-assistant/', views.chatbot_order_view, name='chatbot_order'),
+    path('dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path('kitchen/', views.kitchen_portal_view, name='kitchen_portal'),
 ]

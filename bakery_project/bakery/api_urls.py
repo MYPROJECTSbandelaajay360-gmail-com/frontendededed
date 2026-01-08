@@ -40,4 +40,12 @@ urlpatterns = [
     path('chatbot/order/create/', chatbot_views.chatbot_order_create, name='chatbot_order_create'),
     path('chatbot/order/payment/verify/', chatbot_views.chatbot_order_payment_verify, name='chatbot_order_payment_verify'),
     path('chatbot/order/status/<str:order_id>/', chatbot_views.chatbot_order_status, name='chatbot_order_status'),
+    
+    # Admin and Kitchen Portal Real-time APIs
+    path('admin/stats/', api_views.admin_dashboard_stats_api, name='admin_stats'),
+    path('kitchen/orders/', api_views.kitchen_orders_api, name='kitchen_orders'),
+    path('orders/<int:order_id>/update-status/', api_views.update_order_status_api, name='update_order_status'),
+    
+    # Admin dashboard actions
+    path('orders/<int:pk>/update-status/', api_views.OrderViewSet.as_view({'post': 'update_status'}), name='order-update-status'),
 ]

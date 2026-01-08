@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Premium Café</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfaf6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #8d6e63;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            color: #3e2723;
+        }
+
+        .table-info {
+            background: #efebe9;
+            color: #3e2723;
+        }
+
+        .table-number {
+            color: #8d6e63;
+        }
+
+        .option-btn:hover {
+            border-color: #8d6e63;
+        }
+
+        .option-icon {
+            background: #8d6e63;
+            color: white;
+        }
+
+        .arrow {
+            color: #8d6e63;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-card">
+            <div class="logo">☕</div>
+            <h1>Welcome to Premium Café</h1>
+            
+            {% if table_number %}
+            <div class="table-info">
+                Table <span class="table-number">{{ table_number }}</span>
+            </div>
+            {% endif %}
+            
+            <p class="subtitle">
+                Choose how you'd like to place your order
+            </p>
+
+            <div class="options">
+                <a href="{% url 'chatbot_order' %}?table={{ table_number }}" class="option-btn">
+                    <div class="option-content">
+                        <div class="option-icon">🤖</div>
+                        <div class="option-text">
+                            <h3>Order with AI Assistant</h3>
+                            <p>Get personalized recommendations and quick ordering</p>
+                        </div>
+                    </div>
+                    <div class="arrow">→</div>
+                </a>
+
+                <a href="{% url 'menu' %}?table={{ table_number }}&mode=browse" class="option-btn">
+                    <div class="option-content">
+                        <div class="option-icon">📋</div>
+                        <div class="option-text">
+                            <h3>Browse Menu</h3>
+                            <p>Explore our full menu and add items manually</p>
+                        </div>
+                    </div>
+                    <div class="arrow">→</div>
+                </a>
+            </div>
+
+            <div class="footer">
+                <p>Need help? Call our staff or use the AI assistant</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

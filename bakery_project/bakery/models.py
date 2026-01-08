@@ -1,6 +1,46 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import qrcode
+from io import BytesIO
+from django.core.files import File
+import uuid
+
+
+class Table(models.Model):
+    """Restaurant tables for QR code ordering"""
+    table_number = models.CharField(max_length=20, unique=True)
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qr_code_url = models.CharField(max_length=500, blank=True)
+    capacity = models.PositiveIntegerField(default=4)
+    location = models.CharField(max_length=100, blank=True, help_text="e.g., Window side, Corner, etc.")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['table_number']
+    
+    def __str__(self):
+        return f"Table {self.table_number}"
+    
+    def generate_qr_code(self, base_url):
+        """Generate QR code for the table"""
+        qr_url = f"{base_url}?table={self.table_number}"
+        self.qr_code_url = qr_url
+        
+        # Generate QR code image
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        filename = f'table_{self.table_number}_qr.png'
+        self.qr_code.save(filename, File(buffer), save=False)
+        self.save()
 
 
 class MenuItem(models.Model):
@@ -34,38 +74,58 @@ class MenuItem(models.Model):
 
 class Order(models.Model):
     """Customer orders with status tracking"""
+    ORDER_TYPE_CHOICES = [
+        ('dine-in', 'Dine In'),
+        ('takeaway', 'Takeaway'),
+        ('delivery', 'Delivery'),
+    ]
+    
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
         ('preparing', 'Preparing'),
-        ('ready', 'Ready for Delivery'),
-        ('delivered', 'Delivered'),
+        ('ready', 'Ready'),
+        ('served', 'Served'),
+        ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
+    table = models.ForeignKey(Table, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     order_id = models.CharField(max_length=100, unique=True)
+    order_type = models.CharField(max_length=20, choices=ORDER_TYPE_CHOICES, default='dine-in')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Customer details (for non-registered users)
+    customer_name = models.CharField(max_length=200, blank=True)
+    customer_phone = models.CharField(max_length=20, blank=True)
+    customer_email = models.EmailField(blank=True)
     
     # Delivery details
     delivery_address = models.TextField(blank=True)
     delivery_phone = models.CharField(max_length=20, blank=True)
     delivery_notes = models.TextField(blank=True)
     
+    # Special instructions
+    special_instructions = models.TextField(blank=True)
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
-    delivered_at = models.DateTimeField(null=True, blank=True)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Order {self.order_id} - {self.user.username}"
+        if self.user:
+            return f"Order {self.order_id} - {self.user.username}"
+        return f"Order {self.order_id} - {self.customer_name or 'Guest'}"
     
     @property
     def grand_total(self):

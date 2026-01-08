@@ -141,25 +141,25 @@ class OrderViewSet(UserFilteredQuerySetMixin, StatusUpdateMixin, viewsets.ModelV
             'order': self.get_serializer(order).data
         })
     
-    @action(detail=True, methods=['patch'], permission_classes=[IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def update_status(self, request, pk=None):
         """Update order status (admin only)"""
         order = self.get_object()
         new_status = request.data.get('status')
         
-        if new_status not in dict(Order.STATUS_CHOICES):
+        if not new_status or new_status not in [s[0] for s in Order.STATUS_CHOICES]:
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Determine timestamp field based on status
-        timestamp_field = 'confirmed_at' if new_status == 'confirmed' else \
-                         'delivered_at' if new_status == 'delivered' else None
+        timestamp_map = {
+            'confirmed': 'confirmed_at',
+            'ready': 'ready_at',
+            'completed': 'completed_at',
+        }
         
-        self.perform_status_update(order, new_status, timestamp_field)
+        self.perform_status_update(order, new_status, timestamp_map.get(new_status))
         
-        return Response({
-            'message': 'Order status updated',
-            'order': self.get_serializer(order).data
-        })
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'])
     def current(self, request):
@@ -311,4 +311,197 @@ def dashboard_stats_api(request):
     stats_data['recent_orders'] = OrderSerializer(recent_orders, many=True).data
     
     return Response(stats_data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def admin_dashboard_stats_api(request):
+    """Get real-time stats for admin dashboard"""
+    from datetime import date, timedelta
+    from decimal import Decimal
+    
+    today = date.today()
+    
+    # Active orders
+    active_orders = Order.objects.filter(
+        status__in=['pending', 'confirmed', 'preparing', 'ready']
+    ).select_related('table', 'user').prefetch_related('items__menu_item').order_by('-created_at')
+    
+    # Today's orders
+    today_orders = Order.objects.filter(created_at__date=today)
+    
+    # Yesterday's orders for comparison
+    yesterday = today - timedelta(days=1)
+    yesterday_orders = Order.objects.filter(created_at__date=yesterday)
+    
+    # Calculate today's revenue from all orders (not just completed)
+    today_revenue = float(today_orders.aggregate(total=Sum('total_amount'))['total'] or 0)
+    yesterday_revenue = float(yesterday_orders.aggregate(total=Sum('total_amount'))['total'] or 0)
+    
+    # Calculate percentage change
+    revenue_change = 0
+    if yesterday_revenue > 0:
+        revenue_change = ((today_revenue - yesterday_revenue) / yesterday_revenue) * 100
+    
+    # Calculate average preparation time for completed orders
+    completed_today = today_orders.filter(status__in=['completed', 'ready'])
+    avg_time_minutes = 0
+    if completed_today.exists():
+        total_minutes = 0
+        count = 0
+        for order in completed_today:
+            if order.confirmed_at and order.ready_at:
+                time_diff = order.ready_at - order.confirmed_at
+                total_minutes += time_diff.total_seconds() / 60
+                count += 1
+        if count > 0:
+            avg_time_minutes = int(total_minutes / count)
+    
+    avg_time = f"{avg_time_minutes} min" if avg_time_minutes > 0 else "N/A"
+    
+    # Statistics
+    stats = {
+        'active_orders_count': active_orders.count(),
+        'today_revenue': today_revenue,
+        'yesterday_revenue': yesterday_revenue,
+        'revenue_change': round(revenue_change, 1),
+        'completed_today': today_orders.filter(status='completed').count(),
+        'total_today': today_orders.count(),
+        'avg_time': avg_time,
+        'orders': []
+    }
+    
+    # Serialize active orders
+    for order in active_orders:
+        order_data = {
+            'id': order.id,
+            'order_id': order.order_id,
+            'order_type': order.order_type,
+            'status': order.status,
+            'total_amount': float(order.total_amount),
+            'created_at': order.created_at.strftime('%I:%M %p'),
+            'table_number': order.table.table_number if order.table else None,
+            'customer_name': order.customer_name or (order.user.username if order.user else 'Guest'),
+            'customer_phone': order.customer_phone,
+            'items': [
+                {
+                    'name': item.menu_item.name,
+                    'quantity': item.quantity,
+                    'price': float(item.price)
+                }
+                for item in order.items.all()
+            ]
+        }
+        stats['orders'].append(order_data)
+    
+    return Response(stats)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def kitchen_orders_api(request):
+    """Get real-time orders for kitchen portal"""
+    from datetime import date
+    
+    today = date.today()
+    
+    # Active orders for kitchen
+    active_orders = Order.objects.filter(
+        status__in=['pending', 'confirmed', 'preparing', 'ready']
+    ).select_related('table', 'user').prefetch_related('items__menu_item').order_by('created_at')
+    
+    # Counts by status
+    stats = {
+        'pending_count': active_orders.filter(status='pending').count(),
+        'preparing_count': active_orders.filter(status='preparing').count(),
+        'ready_count': active_orders.filter(status='ready').count(),
+        'completed_today': Order.objects.filter(
+            created_at__date=today,
+            status='completed'
+        ).count(),
+        'orders': []
+    }
+    
+    # Serialize orders
+    for order in active_orders:
+        order_data = {
+            'id': order.id,
+            'order_id': order.order_id,
+            'order_number': order.order_id.split('-')[-1] if '-' in order.order_id else order.order_id,
+            'order_type': order.order_type,
+            'status': order.status,
+            'total_amount': float(order.total_amount),
+            'created_at': order.created_at.strftime('%I:%M %p'),
+            'time_ago': get_time_ago(order.created_at),
+            'table_number': order.table.table_number if order.table else None,
+            'customer_name': order.customer_name or (order.user.username if order.user else 'Guest'),
+            'customer_phone': order.customer_phone,
+            'customer_email': order.customer_email,
+            'delivery_address': order.delivery_address,
+            'special_instructions': order.special_instructions,
+            'items': [
+                {
+                    'name': item.menu_item.name,
+                    'quantity': item.quantity,
+                    'price': float(item.price)
+                }
+                for item in order.items.all()
+            ]
+        }
+        stats['orders'].append(order_data)
+    
+    return Response(stats)
+
+
+def get_time_ago(dt):
+    """Helper to get human-readable time difference"""
+    from django.utils import timezone
+    diff = timezone.now() - dt
+    
+    if diff.seconds < 60:
+        return f'{diff.seconds}s ago'
+    elif diff.seconds < 3600:
+        return f'{diff.seconds // 60}m ago'
+    elif diff.seconds < 86400:
+        return f'{diff.seconds // 3600}h ago'
+    else:
+        return f'{diff.days}d ago'
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def update_order_status_api(request, order_id):
+    """Update order status - for kitchen/admin"""
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)
+    
+    new_status = request.data.get('status')
+    
+    if not new_status or new_status not in [s[0] for s in Order.STATUS_CHOICES]:
+        return Response({'error': 'Invalid status'}, status=400)
+    
+    order.status = new_status
+    
+    # Update timestamps
+    if new_status == 'confirmed' and not order.confirmed_at:
+        order.confirmed_at = timezone.now()
+    elif new_status == 'ready' and not order.ready_at:
+        order.ready_at = timezone.now()
+    elif new_status == 'completed' and not order.completed_at:
+        order.completed_at = timezone.now()
+    
+    order.save()
+    
+    return Response({
+        'success': True,
+        'message': f'Order {order.order_id} updated to {new_status}',
+        'order': {
+            'id': order.id,
+            'order_id': order.order_id,
+            'status': order.status
+        }
+    })
+
 

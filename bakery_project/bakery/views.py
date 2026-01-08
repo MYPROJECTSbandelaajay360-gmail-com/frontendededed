@@ -3,12 +3,12 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum, Count, Q
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
-from .models import MenuItem, Order, OrderItem, Payment, UserProfile
+from .models import MenuItem, Order, OrderItem, Payment, UserProfile, Table
 import json
 import uuid
 import razorpay
@@ -17,7 +17,7 @@ from decimal import Decimal
 import boto3
 import os
 from botocore.exceptions import ClientError
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 
@@ -58,12 +58,47 @@ def index(request):
 
 def chatbot_view(request):
     """Display the chatbot interface"""
-    return render(request, 'bakery/chatbot_test.html')
+    return render(request, 'bakery/chatbot_premium_v2.html', {
+        'table_number': ''
+    })
+
+
+def qr_landing_view(request):
+    """Landing page after scanning QR code"""
+    table_number = request.GET.get('table', '')
+    return render(request, 'bakery/qr_landing.html', {
+        'table_number': table_number
+    })
+
+
+def chatbot_order_view(request):
+    """Chatbot ordering interface"""
+    table_number = request.GET.get('table', '')
+    return render(request, 'bakery/chatbot_premium_v2.html', {
+        'table_number': table_number
+    })
+
+
+def admin_dashboard_view(request):
+    """Admin dashboard for managing orders"""
+    return render(request, 'bakery/admin_dashboard_v2.html')
+
+
+def kitchen_portal_view(request):
+    """Kitchen staff portal for managing orders"""
+    return render(request, 'bakery/kitchen_portal_v2.html')
 
 
 def menu_view(request):
     menu_items = MenuItem.objects.filter(available=True)
-    return render(request, 'bakery/menu.html', {'menu_items': menu_items})
+    table_number = request.GET.get('table', '')
+    mode = request.GET.get('mode', 'browse')  # browse or chatbot
+    
+    return render(request, 'bakery/menu_premium.html', {
+        'menu_items': menu_items,
+        'table_number': table_number,
+        'mode': mode
+    })
 
 
 def about_view(request):
@@ -83,6 +118,9 @@ def cart_view(request):
 @login_required
 def orders_view(request):
     """Display user-specific orders - only orders belonging to the logged-in user"""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
     # Optimized query with prefetch to reduce database hits
     orders_queryset = Order.objects.filter(user=request.user).select_related(
         'payment'
@@ -94,17 +132,17 @@ def orders_view(request):
     current_orders = orders_queryset.filter(status__in=['pending', 'confirmed', 'preparing', 'ready'])
     
     # Get order history
-    order_history = orders_queryset.filter(status__in=['delivered', 'cancelled'])
+    order_history = orders_queryset.filter(status__in=['completed', 'cancelled'])
     
     # Calculate statistics
     total_orders = orders_queryset.count()
-    delivered_orders = orders_queryset.filter(status='delivered').count()
+    completed_orders = orders_queryset.filter(status='completed').count()
     
     context = {
         'current_orders': current_orders,
         'order_history': order_history,
         'total_orders': total_orders,
-        'delivered_orders': delivered_orders,
+        'completed_orders': completed_orders,
         'user_full_name': request.user.get_full_name() or request.user.username
     }
     return render(request, 'bakery/orders.html', context)

@@ -1,5 +1,41 @@
 from django.contrib import admin
-from .models import MenuItem, Order, OrderItem, Payment, UserProfile
+from .models import MenuItem, Order, OrderItem, Payment, UserProfile, Table
+
+
+@admin.register(Table)
+class TableAdmin(admin.ModelAdmin):
+    """Admin interface for Tables"""
+    list_display = ['table_number', 'capacity', 'location', 'is_active', 'created_at']
+    list_filter = ['is_active', 'capacity']
+    search_fields = ['table_number', 'location']
+    list_editable = ['is_active']
+    readonly_fields = ['qr_code', 'qr_code_url', 'created_at']
+    
+    fieldsets = (
+        ('Table Information', {
+            'fields': ('table_number', 'capacity', 'location', 'is_active')
+        }),
+        ('QR Code', {
+            'fields': ('qr_code', 'qr_code_url'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['generate_qr_codes']
+    
+    def generate_qr_codes(self, request, queryset):
+        """Generate QR codes for selected tables"""
+        base_url = request.build_absolute_uri('/qr-landing/')
+        count = 0
+        for table in queryset:
+            table.generate_qr_code(base_url)
+            count += 1
+        self.message_user(request, f'Generated QR codes for {count} tables')
+    generate_qr_codes.short_description = "Generate QR codes for selected tables"
 
 
 @admin.register(MenuItem)
@@ -58,32 +94,36 @@ class OrderAdmin(admin.ModelAdmin):
     """Admin interface for Orders with comprehensive tracking"""
     list_display = ['order_id', 'user', 'status', 'total_amount', 'delivery_fee', 
                     'grand_total', 'created_at']
-    list_filter = ['status', 'created_at', 'confirmed_at', 'delivered_at']
+    list_filter = ['status', 'created_at', 'confirmed_at', 'completed_at']
     search_fields = ['order_id', 'user__username', 'user__email', 'delivery_phone']
     list_editable = ['status']
     ordering = ['-created_at']
     readonly_fields = ['order_id', 'grand_total', 'created_at', 'updated_at', 
-                      'confirmed_at', 'delivered_at']
+                      'confirmed_at', 'ready_at', 'completed_at']
     inlines = [OrderItemInline, PaymentInline]
     
     fieldsets = (
         ('Order Information', {
-            'fields': ('order_id', 'user', 'status')
+            'fields': ('order_id', 'user', 'status', 'order_type', 'table')
+        }),
+        ('Customer Info', {
+            'fields': ('customer_name', 'customer_phone', 'customer_email'),
+            'classes': ('collapse',)
         }),
         ('Pricing', {
             'fields': ('total_amount', 'delivery_fee', 'grand_total')
         }),
-        ('Delivery Details', {
-            'fields': ('delivery_address', 'delivery_phone', 'delivery_notes')
+        ('Delivery & Notes', {
+            'fields': ('delivery_address', 'delivery_phone', 'delivery_notes', 'special_instructions')
         }),
         ('Timestamps', {
-            'fields': ('created_at', 'updated_at', 'confirmed_at', 'delivered_at'),
+            'fields': ('created_at', 'updated_at', 'confirmed_at', 'ready_at', 'completed_at'),
             'classes': ('collapse',)
         }),
     )
     
     actions = ['mark_as_confirmed', 'mark_as_preparing', 'mark_as_ready', 
-               'mark_as_delivered', 'mark_as_cancelled']
+               'mark_as_completed', 'mark_as_cancelled']
     
     def mark_as_confirmed(self, request, queryset):
         from django.utils import timezone
@@ -97,15 +137,16 @@ class OrderAdmin(admin.ModelAdmin):
     mark_as_preparing.short_description = 'Mark selected orders as Preparing'
     
     def mark_as_ready(self, request, queryset):
-        updated = queryset.update(status='ready')
+        from django.utils import timezone
+        updated = queryset.update(status='ready', ready_at=timezone.now())
         self.message_user(request, f'{updated} orders marked as ready')
     mark_as_ready.short_description = 'Mark selected orders as Ready'
     
-    def mark_as_delivered(self, request, queryset):
+    def mark_as_completed(self, request, queryset):
         from django.utils import timezone
-        updated = queryset.update(status='delivered', delivered_at=timezone.now())
-        self.message_user(request, f'{updated} orders marked as delivered')
-    mark_as_delivered.short_description = 'Mark selected orders as Delivered'
+        updated = queryset.update(status='completed', completed_at=timezone.now())
+        self.message_user(request, f'{updated} orders marked as completed')
+    mark_as_completed.short_description = 'Mark selected orders as Completed'
     
     def mark_as_cancelled(self, request, queryset):
         updated = queryset.update(status='cancelled')

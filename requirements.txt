@@ -8,6 +8,7 @@ razorpay
 requests
 python-decouple
 boto3
+qrcode[pil]
 
 # RAG Chatbot dependencies
 langchain
