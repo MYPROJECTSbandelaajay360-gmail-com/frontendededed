@@ -1,0 +1,10 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-primary: #d2691e; /* chocolate/bakery brown - primary color */
+  --color-primary-hover: #a0522d; /* sienna brown - hover state */
+  --color-secondary: #f5deb3; /* wheat - secondary/accent color */
+  --color-amber-500: #f59e0b; /* amber-500 for compatibility */
+}
