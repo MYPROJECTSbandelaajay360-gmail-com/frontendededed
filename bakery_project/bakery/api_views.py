@@ -503,5 +503,3 @@ def update_order_status_api(request, order_id):
             'status': order.status
         }
     })
-
-

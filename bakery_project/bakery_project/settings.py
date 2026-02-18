@@ -17,9 +17,9 @@ except ImportError:
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # For testing, allows all hosts. For production, use your EC2 public DNS/IP.
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 # Security settings for production (disabled SSL redirect for testing)
 if not DEBUG:
@@ -60,7 +60,9 @@ ROOT_URLCONF = 'bakery_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR.parent, 'frontend', 'dist'),  # React build directory
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -75,20 +77,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bakery_project.wsgi.application'
 
-# Database configuration
-# Use PostgreSQL in production (via DATABASE_URL), SQLite locally
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL and dj_database_url:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+# import dj_database_url
+# # ...
+# # Database configuration
+# DATABASES = {
+#     'default': dj_database_url.parse('postgresql://neondb_owner:npg_tZ8B0KWGCqng@ep-empty-feather-ahx7aqqq-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require')
+# }
+# # ...
+# # The old database configuration is commented out below for reference
+# # DATABASE_URL = os.environ.get('DATABASE_URL')
+# # if DATABASE_URL and dj_database_url:
+# #     DATABASES = {
+# #         'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+# #     }
+# # else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -105,7 +113,11 @@ USE_TZ = True
 # Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = []
+
+# Add frontend build directory to static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR.parent, 'frontend', 'dist'),
+] if os.path.exists(os.path.join(BASE_DIR.parent, 'frontend', 'dist')) else []
 
 # Media files (uploads)
 MEDIA_URL = '/media/'
@@ -169,12 +181,31 @@ ORDER_SMS_NOTIFICATIONS_ENABLED = False
 BAKERY_BUSINESS_NAME = 'Heavenly Bakery'
 BAKERY_BUSINESS_PHONE = '8074691873'
 
-# CORS Settings for Chatbot API (allows requests from HTML file)
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
-# For production, use:
-# CORS_ALLOWED_ORIGINS = [
-#     "https://yourdomain.com",
-# ]
+# CORS Settings for React Frontend
+# CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
+
+# For production, use your production URLs:
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://3.89.185.55:3000",
+    "http://thebakestory.store",
+    "https://thebakestory.store",
+]
+
+# Allow these headers from frontend
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 BAKERY_BUSINESS_ADDRESS = 'Chaitanyapuri, Dilsukhnagar, Hyderabad'
 BAKERY_BUSINESS_EMAIL = 'btechmuthyam@gmail.com'
 

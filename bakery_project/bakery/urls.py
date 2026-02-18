@@ -22,6 +22,5 @@ urlpatterns = [
     # New Premium Café URLs
     path('qr-landing/', views.qr_landing_view, name='qr_landing'),
     path('order-assistant/', views.chatbot_order_view, name='chatbot_order'),
-    path('dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('kitchen/', views.kitchen_portal_view, name='kitchen_portal'),
 ]

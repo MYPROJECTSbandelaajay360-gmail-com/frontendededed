@@ -1,3 +1,22 @@
+# Multi-stage build for React + Django
+# Stage 1: Build React frontend
+FROM node:18-alpine AS frontend-build
+
+WORKDIR /frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build React app
+RUN npm run build
+
+# Stage 2: Python backend
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -16,8 +35,11 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project
-COPY . .
+# Copy the entire Django project
+COPY bakery_project/ /app/bakery_project/
+
+# Copy React build from frontend stage
+COPY --from=frontend-build /frontend/dist /app/frontend/dist
 
 # Set working directory to where manage.py is located
 WORKDIR /app/bakery_project

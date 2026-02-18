@@ -34,7 +34,7 @@ if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
     razorpay_client = None
 else:
     razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-    print(f"✅ Razorpay client initialized with Key ID: {RAZORPAY_KEY_ID}")
+    # print(f"✅ Razorpay client initialized with Key ID: {RAZORPAY_KEY_ID}")
 
 # Initialize chatbot globally (so it persists across requests)
 chatbot_instance = None

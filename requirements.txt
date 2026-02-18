@@ -9,6 +9,8 @@ requests
 python-decouple
 boto3
 qrcode[pil]
+django-ses
+dj-database-url
 
 # RAG Chatbot dependencies
 langchain
