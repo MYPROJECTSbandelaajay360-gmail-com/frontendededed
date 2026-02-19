@@ -9,6 +9,8 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart'),
     path('checkout/', views.cart_view, name='checkout'),
     path('orders/', views.orders_view, name='orders'),
+    path('orders/<str:order_id>/', views.order_detail_view, name='order_detail'),
+
     path('payment/', views.payment_view, name='payment'),
     path('upi-payment/', views.upi_payment_view, name='upi_payment'),
     path('razorpay/callback/', views.razorpay_callback, name='razorpay_callback'),

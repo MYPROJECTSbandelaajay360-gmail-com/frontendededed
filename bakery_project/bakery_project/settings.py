@@ -7,28 +7,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables from .env file
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
-# Import dj_database_url only if needed
-try:
-    import dj_database_url
-except ImportError:
-    dj_database_url = None
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# When deploying to EC2, ensure DEBUG=False is set in your .env file
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    'ALLOWED_HOSTS',
+    '54.162.20.141,thebakestory.shop,www.thebakestory.shop,localhost,127.0.0.1'
+).split(',')
 
-# Security settings for production (disabled SSL redirect for testing)
+# Security settings for production
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # Set to True only when you have HTTPS configured
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False  # Set to True once HTTPS/SSL is configured
+    SESSION_COOKIE_SECURE = False  # Set to True with HTTPS
+    CSRF_COOKIE_SECURE = False    # Set to True with HTTPS
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 0       # Enable after HTTPS is confirmed working
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,14 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'corsheaders',  # Added for chatbot API
+    'corsheaders',
     'bakery',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise for static files
-    'corsheaders.middleware.CorsMiddleware',  # Added for chatbot API - must be before CommonMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise for static files
+    'corsheaders.middleware.CorsMiddleware',       # Must be before CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,9 +59,7 @@ ROOT_URLCONF = 'bakery_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR.parent, 'frontend', 'dist'),  # React build directory
-        ],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,20 +74,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'bakery_project.wsgi.application'
 
-# import dj_database_url
-# # ...
-# # Database configuration
-# DATABASES = {
-#     'default': dj_database_url.parse('postgresql://neondb_owner:npg_tZ8B0KWGCqng@ep-empty-feather-ahx7aqqq-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require')
-# }
-# # ...
-# # The old database configuration is commented out below for reference
-# # DATABASE_URL = os.environ.get('DATABASE_URL')
-# # if DATABASE_URL and dj_database_url:
-# #     DATABASES = {
-# #         'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-# #     }
-# # else:
+# Database — SQLite (good for single-server EC2 deploy)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -106,35 +90,32 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
 # Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = []
 
-# Add frontend build directory to static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR.parent, 'frontend', 'dist'),
-] if os.path.exists(os.path.join(BASE_DIR.parent, 'frontend', 'dist')) else []
-
-# Media files (uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# WhiteNoise configuration for static files in production
+# WhiteNoise configuration for static files — only in production
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Allow access for chatbot
+        'rest_framework.permissions.AllowAny',
     ],
 }
 
@@ -142,59 +123,42 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# ─── Razorpay ────────────────────────────────────────────────────────────────
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
-# Razorpay Configuration
-# Use environment variables for live mode (rzp_live_*), test mode (rzp_test_*)
-RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')  
-RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')    
-
-# AWS DynamoDB Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')  
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_REGION_NAME = os.environ.get('AWS_REGION_NAME', 'ap-south-1') 
-DYNAMODB_CONTACT_TABLE = 'bakery_contacts' 
-
-# SMS Notification Settings
-ADMIN_PHONE_NUMBER = '+918074691873'  
-BAKERY_NAME = 'Heavenly Bakery'
+# ─── SMS Settings ─────────────────────────────────────────────────────────────
+ADMIN_PHONE_NUMBER = '+918074691873'
+BAKERY_NAME = 'The Bake Story'
 SMS_NOTIFICATIONS_ENABLED = False
-# AWS SES Email Configuration (Professional Email Service)
-# For local development, use console backend
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = 'django_ses.SESBackend'
-    AWS_SES_REGION_NAME = 'ap-south-1'  
-    AWS_SES_REGION_ENDPOINT = 'email.ap-south-1.amazonaws.com'
-    AWS_SES_FROM_EMAIL = 'btechmuthyam@gmail.com'  # verified in AWS SES
 
-# Email Notification Settings
-EMAIL_HOST_USER = 'btechmuthyam@gmail.com'  # Your email
-ADMIN_EMAIL = 'btechmuthyam@gmail.com'  # Where you want to receive notifications
-EMAIL_NOTIFICATIONS_ENABLED = True  
+# ─── Email Configuration ──────────────────────────────────────────────────────
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST_USER = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
+EMAIL_NOTIFICATIONS_ENABLED = False
 
-# Order Notification Settings
-ORDER_NOTIFICATION_EMAIL = 'btechmuthyam@gmail.com'  # Where to receive order notifications
-ORDER_EMAIL_NOTIFICATIONS_ENABLED = True  
-ORDER_SMS_NOTIFICATIONS_ENABLED = False  
-BAKERY_BUSINESS_NAME = 'Heavenly Bakery'
+# ─── Order Notification Settings ──────────────────────────────────────────────
+ORDER_NOTIFICATION_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
+ORDER_EMAIL_NOTIFICATIONS_ENABLED = False
+ORDER_SMS_NOTIFICATIONS_ENABLED = False
+BAKERY_BUSINESS_NAME = 'The Bake Story'
 BAKERY_BUSINESS_PHONE = '8074691873'
+BAKERY_BUSINESS_ADDRESS = 'Chaitanyapuri, Dilsukhnagar, Hyderabad'
+BAKERY_BUSINESS_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
 
-# CORS Settings for React Frontend
-# CORS_ALLOW_ALL_ORIGINS = True  # For development only
+# ─── CORS Settings ────────────────────────────────────────────────────────────
 CORS_ALLOW_CREDENTIALS = True
-
-# For production, use your production URLs:
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://54.227.178.218:3000",
-    "http://thebakestory.store",
-    "https://thebakestory.store",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://54.162.20.141",
+    "http://thebakestory.shop",
+    "https://thebakestory.shop",
+    "http://www.thebakestory.shop",
+    "https://www.thebakestory.shop",
 ]
 
-# Allow these headers from frontend
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -206,11 +170,50 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
-BAKERY_BUSINESS_ADDRESS = 'Chaitanyapuri, Dilsukhnagar, Hyderabad'
-BAKERY_BUSINESS_EMAIL = 'btechmuthyam@gmail.com'
 
+# CSRF trusted origins for production
+CSRF_TRUSTED_ORIGINS = [
+    "http://54.162.20.141",
+    "http://thebakestory.shop",
+    "https://thebakestory.shop",
+    "http://www.thebakestory.shop",
+    "https://www.thebakestory.shop",
+]
 
-DEBUG=False
-# SECRET_KEY=your-super-secret-key
-# ALLOWED_HOSTS = ["3.108.223.162", "localhost"]
-# Add other keys as needed (Razorpay, AWS, etc.)
+# ─── Logging ──────────────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'WARNING' if not DEBUG else 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
+
+# Create logs directory if it doesn't exist
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)

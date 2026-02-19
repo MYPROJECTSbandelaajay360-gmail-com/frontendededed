@@ -4,7 +4,8 @@
 <div>
     <section id="filter">
         <h1>Our Menu</h1>
-        <p style="color: #8b4513; text-align: center; margin-bottom: 20px;">Fresh baked daily with premium ingredients</p>
+        <p style="color: #8b4513; text-align: center; margin-bottom: 20px;">Fresh baked daily with premium ingredients
+        </p>
         <div id="filterbuttons">
             <button class="filter-btn active" data-filter="all">All</button>
             <button class="filter-btn" data-filter="bread">Breads</button>
@@ -31,11 +32,8 @@
                     <div class="quantity qty-display" data-id="{{ item.id }}">0</div>
                     <div class="minus minus-btn" data-id="{{ item.id }}">-</div>
                 </aside>
-                <aside id="addtocart" class="addtocart-btn" 
-                       data-id="{{ item.id }}" 
-                       data-name="{{ item.name }}" 
-                       data-price="{{ item.price }}"
-                       data-image="{{ item.image_url }}">
+                <aside id="addtocart" class="addtocart-btn" data-id="{{ item.id }}" data-name="{{ item.name }}"
+                    data-price="{{ item.price }}" data-image="{{ item.image_url }}">
                     <h3>AddToCart</h3>
                 </aside>
             </section>
@@ -43,22 +41,22 @@
         {% endfor %}
     </article>
 
-    
-</div>  
+
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     let cart = JSON.parse(localStorage.getItem('bakeryCart')) || {};
     // isAuthenticated is already declared in base.html
-    
+
     console.log('=== MENU PAGE LOADED ===');
     console.log('Script loaded, authentication status:', isAuthenticated);
     console.log('Initial cart from localStorage:', cart);
-    
+
     function updateCartDisplay() {
         console.log('=== updateCartDisplay called ===');
-        
+
         // Get cart from localStorage
         let cart;
         try {
@@ -67,22 +65,13 @@
             console.error('Error parsing cart from localStorage:', e);
             cart = {};
         }
-        
+
         console.log('Current cart from localStorage:', cart);
-        
+
         let totalQuantity = 0;
         let totalPrice = 0;
 
-        
-
-
-    function addprocessingfee(totalfee){
-        totalfee+=totalfee*3/100
-    }
-
-        
-
-
+        // Calculate totals from cart
         Object.keys(cart).forEach(itemId => {
             const item = cart[itemId];
             if (item && typeof item === 'object') {
@@ -93,54 +82,54 @@
                 console.log(`Item ${itemId}: qty=${qty}, price=${price}, subtotal=${price * qty}`);
             }
         });
-        
+
         console.log('Total quantity:', totalQuantity);
-        console.log('Total price:', addprocessingfee(totalPrice));
-        
+        console.log('Total price:', totalPrice);
+
         // Update navbar display - try multiple selectors
-        const navQuantity = document.querySelector('#quantity') || 
-                          document.querySelector('.quantity') || 
-                          document.querySelector('#nav3 .quantity');
-        const cartPrice = document.querySelector('#cart_price') || 
-                         document.querySelector('#nav3 p');
-        
+        const navQuantity = document.querySelector('#quantity') ||
+            document.querySelector('.quantity') ||
+            document.querySelector('#nav3 .quantity');
+        const cartPrice = document.querySelector('#cart_price') ||
+            document.querySelector('#nav3 p');
+
         console.log('Found navQuantity element:', navQuantity);
         console.log('Found cartPrice element:', cartPrice);
-        
+
         if (navQuantity) {
             navQuantity.textContent = totalQuantity.toString();
             console.log('Updated quantity display to:', totalQuantity);
         } else {
             console.error('Could not find quantity element in navbar');
         }
-        
+
         if (cartPrice) {
             cartPrice.textContent = `₹${totalPrice.toFixed(2)}`;
             console.log('Updated price display to:', `₹${totalPrice.toFixed(2)}`);
         } else {
             console.error('Could not find price element in navbar');
         }
-        
+
         // Trigger a custom event to notify other scripts
         window.dispatchEvent(new CustomEvent('cartDisplayUpdated', {
             detail: { totalQuantity, totalPrice }
         }));
-        
+
         console.log('=== updateCartDisplay completed ===');
     }
-    
+
     // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         console.log('DOM loaded, initializing event listeners...');
         console.log('Authentication status:', isAuthenticated);
-        
+
         // Debug: Check if cart exists
         const existingCart = JSON.parse(localStorage.getItem('bakeryCart')) || {};
         console.log('Existing cart on page load:', existingCart);
-        
+
         // Update cart display immediately
         updateCartDisplay();
-        
+
         // Test localStorage functionality
         console.log('=== TESTING localStorage ===');
         try {
@@ -148,7 +137,7 @@
             const testValue = localStorage.getItem('test');
             console.log('localStorage test result:', testValue);
             localStorage.removeItem('test');
-            
+
             // Check if there's an existing cart
             const existingCart = localStorage.getItem('bakeryCart');
             console.log('Existing bakeryCart in localStorage:', existingCart);
@@ -156,15 +145,15 @@
             console.error('localStorage is not working:', e);
         }
         console.log('=== localStorage test completed ===');
-        
+
         // Filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 console.log('Filter button clicked:', this.dataset.filter);
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 const filter = this.dataset.filter;
-                
+
                 // Filter existing items
                 document.querySelectorAll('.item1').forEach(item => {
                     if (filter === 'all' || item.dataset.category === filter) {
@@ -175,39 +164,39 @@
                 });
             });
         });
-        
+
         // Plus buttons - Using event delegation for better reliability
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             console.log('=== GLOBAL CLICK DETECTED ===');
             console.log('Clicked element:', e.target);
             console.log('Element tag:', e.target.tagName);
             console.log('Element classes:', e.target.className);
             console.log('Element text:', e.target.textContent);
             console.log('Parent element:', e.target.parentElement);
-            
+
             // Check if clicked element or its parent has the plus-btn class
             const plusBtn = e.target.closest('.plus-btn, .plus');
             console.log('Found plus button:', plusBtn);
-            
+
             if (plusBtn) {
                 console.log('=== PLUS BUTTON CLICKED ===');
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const id = plusBtn.dataset.id || plusBtn.getAttribute('data-id');
                 console.log('Item ID:', id);
-                
+
                 // Try multiple ways to find the quantity element
                 const parent = plusBtn.parentElement;
                 console.log('Parent element:', parent);
                 console.log('Parent children:', parent.children);
-                
-                const qtyElement = parent.querySelector('.qty-display') || 
-                                 parent.querySelector('.quantity') ||
-                                 plusBtn.parentElement.querySelector('.qty-display, .quantity');
+
+                const qtyElement = parent.querySelector('.qty-display') ||
+                    parent.querySelector('.quantity') ||
+                    plusBtn.parentElement.querySelector('.qty-display, .quantity');
                 console.log('Quantity element found:', qtyElement);
                 console.log('Quantity element text:', qtyElement ? qtyElement.textContent : 'N/A');
-                
+
                 if (qtyElement) {
                     let qty = parseInt(qtyElement.textContent) || 0;
                     console.log('Current quantity:', qty);
@@ -220,14 +209,14 @@
                     console.error('Parent HTML:', parent.innerHTML);
                 }
             }
-            
+
             // Minus buttons
             const minusBtn = e.target.closest('.minus-btn, .minus');
             if (minusBtn) {
                 console.log('=== MINUS BUTTON CLICKED ===');
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const id = minusBtn.dataset.id || minusBtn.getAttribute('data-id');
                 const qtyElement = minusBtn.parentElement.querySelector('.qty-display, .quantity');
                 if (qtyElement) {
@@ -241,38 +230,38 @@
                     console.error('Quantity element not found for minus button!');
                 }
             }
-            
+
             // Add to cart buttons
             const addToCartBtn = e.target.closest('.addtocart-btn, #addtocart');
             if (addToCartBtn) {
                 console.log('=== ADD TO CART CLICKED ===');
-                
+
                 // REMOVED AUTHENTICATION CHECK FOR TESTING
                 // if (!isAuthenticated) {
                 //     alert('Please login to add items to cart');
                 //     window.location.href = '{% url "login" %}';
                 //     return;
                 // }
-                
+
                 const id = addToCartBtn.dataset.id || addToCartBtn.getAttribute('data-id');
                 const name = addToCartBtn.dataset.name || addToCartBtn.getAttribute('data-name');
                 const price = parseFloat(addToCartBtn.dataset.price || addToCartBtn.getAttribute('data-price'));
                 const image = addToCartBtn.dataset.image || addToCartBtn.getAttribute('data-image');
-                
-                console.log('Item details:', {id, name, price, image});
-                
+
+                console.log('Item details:', { id, name, price, image });
+
                 // Find the parent item container
                 const itemContainer = addToCartBtn.closest('.item1');
                 const qtyElement = itemContainer.querySelector('.qty-display, .quantity');
                 const qty = parseInt(qtyElement.textContent) || 0;
-                
+
                 console.log('Quantity to add:', qty);
-                
+
                 if (qty <= 0) {
                     alert('Please select quantity first!');
                     return;
                 }
-                
+
                 // Get current cart from localStorage
                 let cart;
                 try {
@@ -281,12 +270,12 @@
                     console.error('Error parsing existing cart:', e);
                     cart = {};
                 }
-                
+
                 console.log('Cart before adding:', cart);
-                
+
                 // Use string ID to ensure consistency
                 const itemId = String(id);
-                
+
                 if (cart[itemId]) {
                     cart[itemId].quantity = (cart[itemId].quantity || 0) + qty;
                     console.log('Updated existing item:', cart[itemId]);
@@ -300,7 +289,7 @@
                     };
                     console.log('Added new item:', cart[itemId]);
                 }
-                
+
                 // Save to localStorage
                 try {
                     localStorage.setItem('bakeryCart', JSON.stringify(cart));
@@ -310,30 +299,30 @@
                     alert('Error saving to cart. Please try again.');
                     return;
                 }
-                
+
                 console.log('Cart after adding:', cart);
-                
+
                 // Verify it was saved
                 const savedCart = localStorage.getItem('bakeryCart');
                 console.log('Verified saved cart:', savedCart);
-                
+
                 // Reset quantity display
                 qtyElement.textContent = '0';
-                
+
                 // Update cart display immediately
                 console.log('Updating cart display...');
                 updateCartDisplay();
-                
+
                 // Trigger cart update event for other pages
                 window.dispatchEvent(new Event('cartUpdated'));
-                
+
                 // Show success message
                 alert(`Added ${qty}x ${name} to cart!`);
-                
+
                 console.log('=== ADD TO CART COMPLETED ===');
             }
         });
-        
+
         updateCartDisplay();
         console.log('Event listeners initialized');
     });

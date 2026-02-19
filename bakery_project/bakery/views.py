@@ -14,9 +14,7 @@ import uuid
 import razorpay
 from django.utils import timezone
 from decimal import Decimal
-import boto3
 import os
-from botocore.exceptions import ClientError
 from datetime import datetime, timedelta
 
 
@@ -94,7 +92,7 @@ def menu_view(request):
     table_number = request.GET.get('table', '')
     mode = request.GET.get('mode', 'browse')  # browse or chatbot
     
-    return render(request, 'bakery/menu_premium.html', {
+    return render(request, 'bakery/menu.html', {
         'menu_items': menu_items,
         'table_number': table_number,
         'mode': mode
@@ -146,6 +144,15 @@ def orders_view(request):
         'user_full_name': request.user.get_full_name() or request.user.username
     }
     return render(request, 'bakery/orders.html', context)
+
+
+@login_required
+def order_detail_view(request, order_id):
+    """Display full detail of a single order belonging to the logged-in user"""
+    from django.shortcuts import get_object_or_404
+    order = get_object_or_404(Order, order_id=order_id, user=request.user)
+    return render(request, 'bakery/order_detail.html', {'order': order})
+
 
 
 @login_required
@@ -299,44 +306,37 @@ def payment_view(request):
         delivery_address = request.POST.get('delivery_address')
         delivery_phone = request.POST.get('delivery_phone')
         delivery_notes = request.POST.get('delivery_notes', '')
-        
-        # DEBUG LOGGING
-        print("\n=== PAYMENT VIEW DEBUG ===")
-        print(f"Cart Data: {cart_data[:100] if cart_data else 'NONE'}")
-        print(f"Delivery Address: {delivery_address}")
-        print(f"Delivery Phone: {delivery_phone}")
-        print(f"Delivery Notes: {delivery_notes}")
-        
-        # Validate
+        order_type = request.POST.get('order_type', 'delivery')
+
+        # Validate required fields
         if not all([cart_data, delivery_address, delivery_phone]):
-            print("❌ VALIDATION FAILED - Missing required fields")
-            print(f"cart_data: {bool(cart_data)}, address: {bool(delivery_address)}, phone: {bool(delivery_phone)}")
             messages.error(request, 'Please fill all required fields.')
             return redirect('cart')
-        
+
         try:
-            # Process cart
-            print("Processing cart items...")
+            # Process cart items
             order_items, total_amount, error = process_cart_items(cart_data)
             if error:
-                print(f"❌ CART PROCESSING ERROR: {error}")
                 messages.error(request, error)
                 return redirect('cart')
-            
-            print(f"✅ Cart processed: {len(order_items)} items, Total: {total_amount}")
-            
+
+            # Determine delivery fee
+            delivery_fee = Decimal('50.00') if order_type == 'delivery' else Decimal('0.00')
+
             # Create order in database
             order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
             order = Order.objects.create(
                 user=request.user,
                 order_id=order_id,
+                order_type=order_type,
                 status='pending',
                 total_amount=total_amount,
+                delivery_fee=delivery_fee,
                 delivery_address=delivery_address,
                 delivery_phone=delivery_phone,
                 delivery_notes=delivery_notes
             )
-            
+
             # Create order items
             OrderItem.objects.bulk_create([
                 OrderItem(
@@ -346,24 +346,22 @@ def payment_view(request):
                     price=item['price']
                 ) for item in order_items
             ])
-            
+
             # Create Razorpay order (amount in paise: ₹100 = 10000 paise)
-            from decimal import Decimal
             grand_total = Decimal(str(order.total_amount)) + Decimal(str(order.delivery_fee))
             razorpay_amount = int(float(grand_total) * 100)
-            print(f"Grand Total: {grand_total}, Razorpay Amount (paise): {razorpay_amount}")
-            
+
             razorpay_order = razorpay_client.order.create({
                 'amount': razorpay_amount,
                 'currency': 'INR',
                 'receipt': order_id,
-                'payment_capture': '1'  # Auto capture
+                'payment_capture': '1'
             })
-            
+
             # Store Razorpay order ID
             order.razorpay_order_id = razorpay_order['id']
             order.save()
-            
+
             context = {
                 'order': order,
                 'razorpay_order_id': razorpay_order['id'],
@@ -374,21 +372,15 @@ def payment_view(request):
                 'user_email': request.user.email,
                 'user_phone': delivery_phone
             }
-            print(f"✅ RENDERING RAZORPAY PAYMENT PAGE")
-            print(f"   Order ID: {order.order_id}")
-            print(f"   Razorpay Order ID: {razorpay_order['id']}")
-            print(f"   Amount: {razorpay_amount} paise")
-            print("=== END DEBUG ===\n")
             return render(request, 'bakery/razorpay-payment.html', context)
-            
+
         except Exception as e:
-            print(f"❌ EXCEPTION IN PAYMENT VIEW: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
-            print("=== END DEBUG ===\n")
-            messages.error(request, f'Error creating order: {str(e)}')
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Payment view error: {str(e)}', exc_info=True)
+            messages.error(request, 'Error creating order. Please try again.')
             return redirect('cart')
-    
+
     return render(request, 'bakery/payment.html')
 
 
@@ -509,49 +501,9 @@ def razorpay_webhook(request):
 
 
 def send_sms_notification(contact_id, name, email, phone, message):
-    """Send SMS notification using AWS SNS"""
-    try:
-        if not settings.SMS_NOTIFICATIONS_ENABLED:
-            print("📱 SMS notifications disabled in settings")
-            return False
-            
-        # Create SNS client
-        sns = boto3.client(
-            'sns',
-            region_name=settings.AWS_REGION_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-        )
-        
-        # Format SMS message
-        sms_message = f"""🍰 NEW CONTACT - {settings.BAKERY_NAME}
-
-Name: {name}
-Email: {email}
-Phone: {phone if phone else 'Not provided'}
-Time: {datetime.now().strftime('%H:%M %d/%m/%Y')}
-
-Message: {message[:100]}{'...' if len(message) > 100 else ''}
-
-Contact ID: {contact_id[:8]}
-
-Reply to: {email}"""
-        
-        # Send SMS
-        response = sns.publish(
-            PhoneNumber=settings.ADMIN_PHONE_NUMBER,
-            Message=sms_message
-        )
-        
-        print(f"✅ SMS notification sent successfully!")
-        print(f"📱 Message ID: {response['MessageId']}")
-        print(f"📞 Sent to: {settings.ADMIN_PHONE_NUMBER}")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ SMS notification failed: {str(e)}")
-        return False
+    """Placeholder for SMS notification (AWS SNS removed)"""
+    print(f"📱 SMS notification (simulated): New contact from {name}")
+    return False
 
 
 def send_email_notification(contact_id, name, email, phone, message):
@@ -584,7 +536,7 @@ New contact form submission received!
 📝 QUICK ACTIONS:
 • Reply to customer: {email}
 • Call customer: {phone if phone else 'No phone provided'}
-• View in admin: http://127.0.0.1:8000/admin/
+• View in admin: https://thebakestory.shop/admin/
 
 This notification was sent automatically from {settings.BAKERY_NAME} website.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -780,97 +732,33 @@ GRAND TOTAL: ₹{order.grand_total}
 Phone: {settings.BAKERY_BUSINESS_PHONE}
         """
         
-        # Send email using AWS SES
-        email = EmailMultiAlternatives(
+        # Send email using standard Django mail
+        send_mail(
             subject=subject,
-            body=text_message,
-            from_email=settings.AWS_SES_FROM_EMAIL,
-            to=[settings.ORDER_NOTIFICATION_EMAIL]
+            message=text_message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[settings.ORDER_NOTIFICATION_EMAIL],
+            html_message=html_message,
+            fail_silently=False,
         )
-        email.attach_alternative(html_message, "text/html")
-        email.send()
         
-        print(f"✅ Order notification email sent via AWS SES for Order #{order.id}")
-        print(f"📧 Sent to: {settings.ORDER_NOTIFICATION_EMAIL}")
-        print(f"💰 Order Total: ₹{order.grand_total}")
-        
+        print(f"✅ Order notification email sent for Order #{order.id}")
         return True
         
     except Exception as e:
         print(f"❌ Failed to send order notification email: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return False
 
 
 def send_order_sms_notification(order):
-    """Send SMS notification for new orders"""
-    try:
-        if not settings.ORDER_SMS_NOTIFICATIONS_ENABLED:
-            print("📱 Order SMS notifications disabled in settings")
-            return False
-            
-        sns = boto3.client(
-            'sns',
-            region_name=settings.AWS_REGION_NAME,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-        )
-        
-        # Get payment status safely
-        try:
-            payment_status = order.payment.payment_status.upper() if hasattr(order, 'payment') else 'PENDING'
-        except:
-            payment_status = 'PENDING'
-        
-        # Count items
-        item_count = order.items.count()
-        
-        # Get first few items for SMS
-        order_items = order.items.all()[:3]
-        items_summary = ", ".join([item.menu_item.name for item in order_items])
-        if item_count > 3:
-            items_summary += f" +{item_count - 3} more"
-        
-        sms_message = f"""🍰 NEW ORDER - {settings.BAKERY_BUSINESS_NAME}
-
-Order #{order.id}
-Customer: {order.user.first_name} {order.user.last_name}
-Amount: ₹{order.grand_total}
-Phone: {order.delivery_phone}
-
-Items ({item_count}): {items_summary}
-
-Status: {order.status.upper()}
-Payment: {payment_status}
-
-Check email for full details!"""
-        
-        response = sns.publish(
-            PhoneNumber=settings.ADMIN_PHONE_NUMBER,
-            Message=sms_message,
-            MessageAttributes={{
-                'AWS.SNS.SMS.SMSType': {{
-                    'DataType': 'String',
-                    'StringValue': 'Transactional'
-                }}
-            }}
-        )
-        
-        print(f"✅ Order SMS sent for Order #{order.id}")
-        print(f"📱 Sent to: {settings.ADMIN_PHONE_NUMBER}")
-        print(f"📨 Message ID: {response['MessageId']}")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Order SMS failed: {str(e)}")
-        return False
+    """Placeholder for Order SMS notification (AWS SNS removed)"""
+    print(f"📱 Order SMS notification (simulated) for Order #{order.id}")
+    return False
 
 
 @csrf_exempt
 def submit_contact_form(request):
-    """Store contact form submissions in AWS DynamoDB and send SMS notification"""
+    """Handle contact form submissions by printing to console (AWS removed)"""
     if request.method == 'POST':
         try:
             # Get form data
@@ -887,69 +775,18 @@ def submit_contact_form(request):
                     'error': 'Name, email, and message are required'
                 }, status=400)
             
-            # Initialize DynamoDB client
-            dynamodb = boto3.resource(
-                'dynamodb',
-                region_name=settings.AWS_REGION_NAME,
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-            )
-            
-            table = dynamodb.Table(settings.DYNAMODB_CONTACT_TABLE)
-            
             # Generate unique contact ID
             contact_id = str(uuid.uuid4())
-            timestamp = datetime.now().isoformat()
-            
-            # Store in DynamoDB
-            item = {
-                'contact_id': contact_id,
-                'name': name,
-                'email': email,
-                'phone': phone if phone else 'Not provided',
-                'message': message,
-                'timestamp': timestamp,
-                'status': 'new'  # Can be: new, read, responded
-            }
-            
-            table.put_item(Item=item)
             
             print(f"✅ Contact form submitted - ID: {contact_id}")
-            print(f"   Name: {name}, Email: {email}")
-            
-            # � SEND EMAIL NOTIFICATION (Primary)
-            email_sent = send_email_notification(contact_id, name, email, phone, message)
-            
-            # �📱 SEND SMS NOTIFICATION (Secondary - if enabled)
-            sms_sent = False
-            if settings.SMS_NOTIFICATIONS_ENABLED:
-                sms_sent = send_sms_notification(contact_id, name, email, phone, message)
-            
-            # Log notification results
-            if email_sent:
-                print(f"📧 Email alert sent for contact from {name}")
-            else:
-                print(f"⚠️ Email alert failed for contact from {name}")
-                
-            if settings.SMS_NOTIFICATIONS_ENABLED:
-                if sms_sent:
-                    print(f"📱 SMS alert sent for contact from {name}")
-                else:
-                    print(f"⚠️ SMS alert failed for contact from {name}")
+            print(f"   Name: {name}, Email: {email}, Phone: {phone}")
+            print(f"   Message: {message}")
             
             return JsonResponse({
                 'success': True,
                 'message': 'Thank you for your message! We will get back to you soon.',
                 'contact_id': contact_id
             })
-            
-        except ClientError as e:
-            error_msg = f"AWS DynamoDB Error: {str(e)}"
-            print(f"❌ DynamoDB Error: {error_msg}")
-            return JsonResponse({
-                'success': False,
-                'error': 'Unable to save your message. Please try again later.'
-            }, status=500)
             
         except json.JSONDecodeError:
             return JsonResponse({
@@ -959,6 +796,10 @@ def submit_contact_form(request):
             
         except Exception as e:
             print(f"❌ Unexpected error in contact form: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Unable to save your message. Please try again later.'
+            }, status=500)
             return JsonResponse({
                 'success': False,
                 'error': 'An error occurred. Please try again later.'

@@ -7,38 +7,38 @@
         margin: 40px auto;
         padding: 20px;
     }
-    
+
     .payment-card {
         background: white;
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
-    
+
     .order-summary {
         background: #f8f9fa;
         padding: 20px;
         border-radius: 10px;
         margin-bottom: 25px;
     }
-    
+
     .order-summary h3 {
         color: #d2691e;
         margin-bottom: 15px;
         font-size: 18px;
     }
-    
+
     .order-item {
         display: flex;
         justify-content: space-between;
         padding: 10px 0;
         border-bottom: 1px solid #e0e0e0;
     }
-    
+
     .order-item:last-child {
         border-bottom: none;
     }
-    
+
     .order-total {
         display: flex;
         justify-content: space-between;
@@ -49,19 +49,19 @@
         font-size: 18px;
         color: #d2691e;
     }
-    
+
     .payment-method {
         margin: 25px 0;
     }
-    
+
     .payment-method h3 {
         margin-bottom: 15px;
     }
-    
+
     .payment-method input[type="radio"] {
         display: none;
     }
-    
+
     .payment-method label {
         display: block;
         padding: 15px 20px;
@@ -74,17 +74,17 @@
         align-items: center;
         gap: 10px;
     }
-    
+
     .payment-method label i {
         font-size: 24px;
         color: #d2691e;
     }
-    
-    .payment-method input[type="radio"]:checked + label {
+
+    .payment-method input[type="radio"]:checked+label {
         border-color: #d2691e;
         background: #fff5ee;
     }
-    
+
     .payment-details {
         display: none;
         margin: 20px 0;
@@ -92,16 +92,16 @@
         background: #f8f9fa;
         border-radius: 10px;
     }
-    
+
     .payment-details.active {
         display: block;
     }
-    
+
     .payment-details h4 {
         color: #d2691e;
         margin-bottom: 15px;
     }
-    
+
     .payment-input {
         width: 100%;
         padding: 12px 15px;
@@ -110,12 +110,12 @@
         border-radius: 8px;
         font-size: 14px;
     }
-    
+
     .payment-input:focus {
         outline: none;
         border-color: #d2691e;
     }
-    
+
     .pay-button {
         width: 100%;
         padding: 15px;
@@ -129,108 +129,82 @@
         transition: all 0.3s;
         margin-top: 20px;
     }
-    
+
     .pay-button:hover {
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(210, 105, 30, 0.3);
     }
-    
+
     .pay-button:disabled {
         background: #ccc;
         cursor: not-allowed;
     }
 </style>
- <div class="payment-container">
-        <div class="payment-card">
-            {% csrf_token %}
-            <h2 style="color: #d2691e; margin-bottom: 20px;">
-              Complete Your Payment
-            </h2>
-            
-            <!-- Order Summary -->
-            <div class="order-summary">
-                <h3>Order Summary</h3>
-                <div id="orderItems"></div>
-                <div class="order-item">
-                    <span>Subtotal:</span>
-                    <span id="subtotal">₹0.00</span>
-                </div>
-                <div class="order-item">
-                    <span>Delivery Fee:</span>
-                    <span id="deliveryFee">₹50.00</span>
-                </div>
-                <div class="order-total">
-                    <span>Total Amount:</span>
-                    <span id="totalAmount">₹0.00</span>
-                </div>
-            </div>
-            
-            <!-- Payment Methods -->
-            <div class="payment-method">
-                <h3 style="color: #d2691e; margin-bottom: 15px;">Select Payment Method</h3>
-                
-                <input type="radio" name="payment_method" id="upi" value="UPI" checked>
-                <label for="upi">
-                    <i class="ri-smartphone-line"></i> UPI Payment
-                </label>
-                
-                <input type="radio" name="payment_method" id="bank" value="BANK">
-                <label for="bank">
-                    <i class="ri-bank-line"></i> Bank Account
-                </label>
-                
-                <input type="radio" name="payment_method" id="card" value="CARD">
-                <label for="card">
-                    <i class="ri-bank-card-line"></i> Credit/Debit Card
-                </label>
-            </div>
-            
-            <!-- UPI Payment Details -->
-            <div class="payment-details active" id="upiDetails">
-                <!-- <h4>UPI Payment Details</h4>
-                <input type="text" class="payment-input" id="upiId" placeholder="Enter UPI ID (e.g., username@paytm)">
-                <p style="color: #666; font-size: 12px;">
-                    <i class="ri-information-line"></i> Enter your UPI ID to complete the payment
-                </p> -->
-            </div>
-            
-            <!-- Bank Payment Details -->
-            <div class="payment-details" id="bankDetails">
-                <h4>Bank Account Details</h4>
-                <input type="text" class="payment-input" id="bankName" placeholder="Bank Name">
-                <input type="text" class="payment-input" id="accountNumber" placeholder="Account Number">
-                <p style="color: #666; font-size: 12px;">
-                    <i class="ri-shield-check-line"></i> Your payment will be securely processed
-                </p>
-            </div>
-            
-            <!-- Card Payment Details -->
-            <div class="payment-details" id="cardDetails">
-                <h4>Card Details</h4>
-                <input type="text" class="payment-input" placeholder="Card Number" maxlength="16">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" class="payment-input" placeholder="MM/YY" style="flex: 1;">
-                    <input type="text" class="payment-input" placeholder="CVV" maxlength="3" style="flex: 1;">
-                </div>
-                <input type="text" class="payment-input" placeholder="Cardholder Name">
-            </div>
-            
-            <!-- Delivery Details Form -->
-            <div style="margin: 25px 0;">
-                <h3 style="color: #d2691e; margin-bottom: 15px;">Delivery Details</h3>
-                <input type="text" class="payment-input" id="deliveryAddress" placeholder="Delivery Address *" required>
-                <input type="tel" class="payment-input" id="deliveryPhone" placeholder="Phone Number *" required>
-                <textarea class="payment-input" id="deliveryNotes" placeholder="Delivery Notes (Optional)" rows="3"></textarea>
-            </div>
+<div class="payment-container">
+    <div class="payment-card">
+        {% csrf_token %}
+        <h2 style="color: #d2691e; margin-bottom: 20px;">
+            Complete Your Payment
+        </h2>
 
-            <!-- Pay Button -->
-            <button class="pay-button" id="payButton" type="button">
-                Pay with Razorpay
-            </button>
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <h3>Order Summary</h3>
+            <div id="orderItems"></div>
+            <div class="order-item">
+                <span>Subtotal:</span>
+                <span id="subtotal">₹0.00</span>
+            </div>
+            <div class="order-item">
+                <span>Delivery Fee:</span>
+                <span id="deliveryFee">₹50.00</span>
+            </div>
+            <div class="order-total">
+                <span>Total Amount:</span>
+                <span id="totalAmount">₹0.00</span>
+            </div>
         </div>
-        
-        <!-- Payment Success Message -->
-        <!-- <div class="payment-success" id="paymentSuccess">
+
+        <!-- Order Type Selection -->
+        <div class="payment-method">
+            <h3 style="color: #d2691e; margin-bottom: 15px;">Choose Delivery Option</h3>
+
+            <input type="radio" name="order_type" id="delivery" value="delivery" checked>
+            <label for="delivery">
+                <i class="ri-truck-line"></i> Home Delivery
+            </label>
+
+            <input type="radio" name="order_type" id="takeaway" value="takeaway">
+            <label for="takeaway">
+                <i class="ri-store-2-line"></i> Pickup at Store
+            </label>
+        </div>
+
+        <!-- Delivery/Pickup Details Form -->
+        <div id="deliveryDetailsSection" style="margin: 25px 0;">
+            <h3 id="detailsTitle" style="color: #d2691e; margin-bottom: 15px;">Delivery Details</h3>
+            <div id="addressGroup">
+                <input type="text" class="payment-input" id="deliveryAddress" placeholder="Delivery Address *" required>
+            </div>
+            <div id="storeAddressGroup"
+                style="display: none; padding: 15px; background: #fff5ee; border-radius: 10px; border: 1px solid #d2691e; margin-bottom: 15px;">
+                <p style="color: #d2691e; font-weight: bold; margin-bottom: 5px;"><i class="ri-map-pin-line"></i> Store
+                    Address:</p>
+                <p style="color: #8b4513;">Hno:12-13-123/4, 3rd floor,Near max store , Chaitanyapuri , Hyderabad </p>
+            </div>
+            <input type="tel" class="payment-input" id="deliveryPhone" placeholder="Phone Number *" required>
+            <textarea class="payment-input" id="deliveryNotes" placeholder="Additional Notes (Optional)"
+                rows="3"></textarea>
+        </div>
+
+        <!-- Pay Button -->
+        <button class="pay-button" id="payButton" type="button">
+            Pay with Razorpay
+        </button>
+    </div>
+
+    <!-- Payment Success Message -->
+    <!-- <div class="payment-success" id="paymentSuccess">
             <i class="ri-checkbox-circle-fill"></i>
             <h2>Payment Successful!</h2>
             <p>Your payment has been verified and processed successfully.</p>
@@ -241,33 +215,34 @@
                 View My Orders
             </button>
         </div> -->
-    </div>
+</div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-     function updateCartDisplay() {
-            const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
-            const totalQuantity = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
-            const totalPrice = Object.values(cartData).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            const navQuantity = document.querySelector('#quantity');
-            const cartPrice = document.querySelector('#cart_price');
-            
-            if (navQuantity) navQuantity.textContent = totalQuantity;
-            if (cartPrice) cartPrice.textContent = `₹${totalPrice.toFixed(2)}`;
-        }
-        
-        // Load cart display when page loads
-        document.addEventListener('DOMContentLoaded', updateCartDisplay);
-    
+    function updateCartDisplay() {
+        const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
+        const totalQuantity = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
+        const totalPrice = Object.values(cartData).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        const navQuantity = document.querySelector('#quantity');
+        const cartPrice = document.querySelector('#cart_price');
+
+        if (navQuantity) navQuantity.textContent = totalQuantity;
+        if (cartPrice) cartPrice.textContent = `₹${totalPrice.toFixed(2)}`;
+    }
+
+    // Load cart display when page loads
+    document.addEventListener('DOMContentLoaded', updateCartDisplay);
+
     // Function to format numbers as currency
 
     function formatCurrency(amount) {
         return `₹${amount.toFixed(2)}`;
     }
 
+    // Function to load order summary from localStorage
     // Function to load order summary from localStorage
     function loadOrderSummary() {
         const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
@@ -292,50 +267,51 @@
             orderItemsContainer.appendChild(itemDiv);
         });
 
-        const deliveryFee = 50.00; // Fixed delivery fee
+        // Calculate delivery fee based on selected order type
+        const orderType = document.querySelector('input[name="order_type"]:checked').value;
+        const deliveryFee = orderType === 'delivery' ? 50.00 : 0.00;
         const totalAmount = subtotal + deliveryFee;
 
         subtotalElem.textContent = formatCurrency(subtotal);
         deliveryFeeElem.textContent = formatCurrency(deliveryFee);
         totalAmountElem.textContent = formatCurrency(totalAmount);
     }
-    
+
     // Update cart display in navigation
-    function updateCartDisplay() {  
+    function updateCartDisplay() {
         const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
         const totalQuantity = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
         const totalPrice = Object.values(cartData).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
+
         const navQuantity = document.querySelector('#quantity');
         const cartPrice = document.querySelector('#cart_price');
-        
+
         if (navQuantity) navQuantity.textContent = totalQuantity;
         if (cartPrice) cartPrice.textContent = `₹${totalPrice.toFixed(2)}`;
     }
-    
-    // Function to handle payment method selection
-    function handlePaymentMethodChange() {  
 
-        const paymentMethods = document.getElementsByName('payment_method');
-        const upiDetails = document.getElementById('upiDetails');
-        const bankDetails = document.getElementById('bankDetails');
-        const cardDetails = document.getElementById('cardDetails');
+    // Function to handle order type selection
+    function handleOrderTypeChange() {
+        const orderTypes = document.getElementsByName('order_type');
+        const addressGroup = document.getElementById('addressGroup');
+        const storeAddressGroup = document.getElementById('storeAddressGroup');
+        const detailsTitle = document.getElementById('detailsTitle');
+        const deliveryAddress = document.getElementById('deliveryAddress');
 
-        paymentMethods.forEach(method => {
-            method.addEventListener('change', () => {
-                upiDetails.classList.remove('active');
-                bankDetails.classList.remove('active');
-                cardDetails.classList.remove('active');
-
-                if (method.checked) {
-                    if (method.value === 'UPI') {
-                        upiDetails.classList.add('active');
-                    } else if (method.value === 'BANK') {
-                        bankDetails.classList.add('active');
-                    } else if (method.value === 'CARD') {
-                        cardDetails.classList.add('active');
-                    }
+        orderTypes.forEach(type => {
+            type.addEventListener('change', () => {
+                if (type.value === 'delivery') {
+                    addressGroup.style.display = 'block';
+                    storeAddressGroup.style.display = 'none';
+                    detailsTitle.textContent = 'Delivery Details';
+                    deliveryAddress.required = true;
+                } else {
+                    addressGroup.style.display = 'none';
+                    storeAddressGroup.style.display = 'block';
+                    detailsTitle.textContent = 'Pickup Details';
+                    deliveryAddress.required = false;
                 }
+                loadOrderSummary();
             });
         });
     }
@@ -343,111 +319,98 @@
     // Function to handle payment processing
     function processPayment() {
         console.log('Payment button clicked!');
-        
-        // Get delivery details
+
+        const orderType = document.querySelector('input[name="order_type"]:checked').value;
         const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
         const deliveryPhone = document.getElementById('deliveryPhone').value.trim();
         const deliveryNotes = document.getElementById('deliveryNotes').value.trim();
-        
-        console.log('Delivery details:', {deliveryAddress, deliveryPhone, deliveryNotes});
-        
+
+        console.log('Order Details:', { orderType, deliveryAddress, deliveryPhone, deliveryNotes });
+
         // Validate delivery details
-        if (!deliveryAddress || !deliveryPhone) {
-            alert('Please fill in delivery address and phone number');
+        if (orderType === 'delivery' && !deliveryAddress) {
+            alert('Please fill in your delivery address');
             return;
         }
-        
+        if (!deliveryPhone) {
+            alert('Please fill in your phone number');
+            return;
+        }
+
         // Get cart data
         const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
-        console.log('Cart data:', cartData);
-        
         if (Object.keys(cartData).length === 0) {
             alert('Your cart is empty!');
             window.location.href = "{% url 'menu' %}";
             return;
         }
-        
+
         // Create form and submit
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = "{% url 'payment' %}";
-        
+
         // Add CSRF token
         const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
         if (!csrfTokenElement) {
             alert('CSRF token not found! Please refresh the page.');
-            console.error('CSRF token element not found');
             return;
         }
-        
-        const csrfToken = csrfTokenElement.value;
-        console.log('CSRF token found:', csrfToken ? 'Yes' : 'No');
-        
+
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken;
+        csrfInput.value = csrfTokenElement.value;
         form.appendChild(csrfInput);
-        
+
+        // Add order type
+        const typeInput = document.createElement('input');
+        typeInput.type = 'hidden';
+        typeInput.name = 'order_type';
+        typeInput.value = orderType;
+        form.appendChild(typeInput);
+
         // Add cart data
         const cartInput = document.createElement('input');
         cartInput.type = 'hidden';
         cartInput.name = 'cart_data';
         cartInput.value = JSON.stringify(cartData);
         form.appendChild(cartInput);
-        
+
         // Add delivery details
         const addressInput = document.createElement('input');
         addressInput.type = 'hidden';
         addressInput.name = 'delivery_address';
-        addressInput.value = deliveryAddress;
+        addressInput.value = orderType === 'delivery' ? deliveryAddress : 'Store Pickup';
         form.appendChild(addressInput);
-        
+
         const phoneInput = document.createElement('input');
         phoneInput.type = 'hidden';
         phoneInput.name = 'delivery_phone';
         phoneInput.value = deliveryPhone;
         form.appendChild(phoneInput);
-        
+
         const notesInput = document.createElement('input');
         notesInput.type = 'hidden';
         notesInput.name = 'delivery_notes';
         notesInput.value = deliveryNotes;
         form.appendChild(notesInput);
-        
+
         // Submit form
-        console.log('Submitting form...');
         document.body.appendChild(form);
         form.submit();
     }
 
-    // Update cart display on page load
-    function updateCartDisplay() {  
-        const cartData = JSON.parse(localStorage.getItem('bakeryCart')) || {};
-        const totalQuantity = Object.values(cartData).reduce((sum, item) => sum + item.quantity, 0);
-        const totalPrice = Object.values(cartData).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
-        const navQuantity = document.querySelector('#quantity');
-        const cartPrice = document.querySelector('#cart_price');
-        
-        if (navQuantity) navQuantity.textContent = totalQuantity;
-        if (cartPrice) cartPrice.textContent = `₹${totalPrice.toFixed(2)}`;
-    }
-
     // Initialize everything when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('Payment page loaded!');
         loadOrderSummary();
-        handlePaymentMethodChange();
+        handleOrderTypeChange();
         updateCartDisplay();
-        
+
         // Add click event to pay button
         const payButton = document.getElementById('payButton');
         if (payButton) {
-            console.log('Pay button found, adding event listener');
             payButton.addEventListener('click', processPayment);
-        } else {
-            console.error('Pay button not found!');
         }
     });
 

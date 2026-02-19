@@ -304,7 +304,7 @@ CONTEXT FROM DATABASE:
 
 QUESTION: {query}
 
-ANSWER (provide clear, helpful information based  on the database context and ADDITIONAL_BAKERY_INFO if question is about ajay. deva, monty, shubam, rahul, qspiders or about bakery or about chatbot developer give entire data about them):
+ANSWER (provide clear, helpful information based  on the database context and ADDITIONAL_BAKERY_INFO if question is about bakery or about chatbot developer give short summary data about them and if the question is about any baterky related information give required data to them  ):
 """
 
     response = llm.invoke(prompt)

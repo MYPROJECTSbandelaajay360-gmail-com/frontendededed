@@ -2,181 +2,578 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+<style>
+    /* ── Orders Page ─────────────────────────── */
+    .orders-page {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 10px 20px 60px;
+        /* minimal top so no gap */
+    }
+
+    /* Page heading */
+    .orders-heading {
+        text-align: center;
+        padding: 16px 0 12px;
+        border-bottom: 1px solid #f5ece0;
+        margin-bottom: 18px;
+    }
+
+    .orders-heading h1 {
+        font-family: 'Pacifico', cursive;
+        font-size: 26px;
+        color: #333;
+        margin-bottom: 3px;
+    }
+
+    .orders-heading p {
+        color: #8b4513;
+        font-size: 14px;
+    }
+
+    .stats-row {
+        display: inline-flex;
+        gap: 18px;
+        margin-top: 8px;
+        background: #fdf6ee;
+        border-radius: 20px;
+        padding: 5px 18px;
+        font-size: 12px;
+        color: #777;
+    }
+
+    .stats-row strong {
+        color: #d2691e;
+    }
+
+    /* Tab bar */
+    .tab-bar {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .tab-bar button {
+        padding: 8px 20px;
+        border-radius: 22px;
+        border: 2px solid #d2691e;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .tab-bar button.active {
+        background: #d2691e;
+        color: white;
+    }
+
+    .tab-bar button:not(.active) {
+        background: white;
+        color: #d2691e;
+    }
+
+    .badge-num {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 10px;
+        margin-left: 5px;
+    }
+
+    .tab-bar button.active .badge-num {
+        background: white;
+        color: #d2691e;
+    }
+
+    .tab-bar button:not(.active) .badge-num {
+        background: #d2691e;
+        color: white;
+    }
+
+    /* ── Card Grid ── */
+    .orders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 16px;
+    }
+
+    /* Card wrapper — entire card is a link */
+    .o-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        border-radius: 14px;
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .o-card-link:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(210, 105, 30, .18);
+    }
+
+    /* Card */
+    .o-card {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+        overflow: hidden;
+        border-top: 4px solid #d2691e;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .o-card.history {
+        border-top-color: #bbb;
+    }
+
+    /* Top row */
+    .o-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 13px 14px 10px;
+        border-bottom: 1px solid #f5ece0;
+    }
+
+    .o-card-top .oid {
+        font-size: 13px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .o-card-top .odt {
+        font-size: 11px;
+        color: #bbb;
+        margin-top: 2px;
+    }
+
+    /* Status badge */
+    .sbadge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .s-pending {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+
+    .s-confirmed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .s-preparing {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .s-ready {
+        background: #ede7f6;
+        color: #6a1b9a;
+    }
+
+    .s-completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .s-cancelled {
+        background: #fce4ec;
+        color: #c62828;
+    }
+
+    .s-delivered {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    /* Items list */
+    .o-card-items {
+        padding: 10px 14px;
+        flex: 1;
+    }
+
+    .o-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px dashed #f0e5d4;
+    }
+
+    .o-item:last-child {
+        border-bottom: none;
+    }
+
+    .o-item img {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid #f0e0cc;
+    }
+
+    .o-item .iname {
+        font-size: 12px;
+        color: #444;
+        flex: 1;
+        line-height: 1.3;
+    }
+
+    .o-item .iqty {
+        font-size: 11px;
+        color: #bbb;
+        margin-right: 4px;
+    }
+
+    .o-item .iprice {
+        font-size: 12px;
+        font-weight: 700;
+        color: #d2691e;
+        white-space: nowrap;
+    }
+
+    /* Footer */
+    .o-card-foot {
+        padding: 10px 14px 13px;
+        border-top: 1px solid #f5ece0;
+    }
+
+    .foot-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .foot-row .lbl {
+        font-size: 12px;
+        color: #aaa;
+    }
+
+    .foot-row .total {
+        font-size: 17px;
+        font-weight: 700;
+        color: #d2691e;
+    }
+
+    .addr-line {
+        font-size: 11px;
+        color: #aaa;
+        margin-top: 6px;
+        line-height: 1.4;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pay-pill {
+        display: inline-block;
+        margin-top: 7px;
+        font-size: 11px;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .pay-completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .pay-pending {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+
+    .pay-failed {
+        background: #fce4ec;
+        color: #c62828;
+    }
+
+    /* view-detail hint */
+    .view-hint {
+        font-size: 11px;
+        color: #d2691e;
+        margin-top: 8px;
+        text-align: right;
+        font-weight: 600;
+    }
+
+    .view-hint i {
+        font-size: 10px;
+    }
+
+    /* Empty state */
+    .empty-state {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #d2691e;
+        opacity: .3;
+        display: block;
+        margin-bottom: 14px;
+    }
+
+    .empty-state h3 {
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .empty-state p {
+        color: #aaa;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .empty-state a {
+        background: linear-gradient(135deg, #d2691e, #8b4513);
+        color: white;
+        padding: 11px 28px;
+        border-radius: 22px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    /* Login prompt */
+    .login-prompt {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .login-prompt i {
+        font-size: 48px;
+        color: #d2691e;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .login-prompt h2 {
+        font-family: 'Pacifico', cursive;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .login-prompt p {
+        color: #666;
+        margin-bottom: 22px;
+    }
+
+    .login-prompt a.btn {
+        background: linear-gradient(135deg, #d2691e, #8b4513);
+        color: white;
+        padding: 11px 28px;
+        border-radius: 22px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<!-- User Authentication Check -->
+
 {% if not user.is_authenticated %}
-<section id="login-required">
-    <div class="container">
-        <div class="login-prompt">
-            <i class="fas fa-lock"></i>
-            <h2>Login Required</h2>
-            <p>Please log in to view your orders and order history.</p>
-            <a href="{% url 'login' %}" class="btn btn-primary">Login Now</a>
-            <p style="margin-top: 15px;">
-                Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
-            </p>
-        </div>
-    </div>
-</section>
+<div class="login-prompt">
+    <i class="fas fa-lock"></i>
+    <h2>Login Required</h2>
+    <p>Please log in to view your orders and order history.</p>
+    <a href="{% url 'login' %}" class="btn">Login Now</a>
+    <p style="margin-top:16px;font-size:14px;color:#999;">
+        Don't have an account? <a href="{% url 'signup' %}" style="color:#d2691e;font-weight:600;">Sign up</a>
+    </p>
+</div>
+
 {% else %}
-<!-- User is authenticated - show orders -->
-<section id="orders-header">
-    <div class="container">
-        <h1><i class="fas fa-receipt"></i> My Orders</h1>
-        <p>Welcome back, {{ user_full_name }}! Track your delicious bakery orders and order history</p>
+
+<div class="orders-page">
+
+    <!-- Heading -->
+    <div class="orders-heading">
+        <h1>My Orders</h1>
+        <p>Welcome back, {{ user_full_name }}!</p>
         {% if total_orders > 0 %}
-        <div class="order-stats">
-            <span><strong>Total Orders:</strong> {{ total_orders }}</span>
-            <span><strong>Delivered:</strong> {{ delivered_orders }}</span>
+        <div class="stats-row">
+            <span>Total &nbsp;<strong>{{ total_orders }}</strong></span>
+            <span>Completed &nbsp;<strong>{{ completed_orders }}</strong></span>
         </div>
         {% endif %}
     </div>
-</section>
 
-<section id="orders-content">
-    <div class="container">
-        <div class="orders-tabs">
-            <button class="tab-btn active" data-tab="current">
-                Current Orders 
-                {% if current_orders.count > 0 %}
-                <span class="badge">{{ current_orders.count }}</span>
-                {% endif %}
-            </button>
-            <button class="tab-btn" data-tab="history">
-                Order History
-                {% if order_history.count > 0 %}
-                <span class="badge">{{ order_history.count }}</span>
-                {% endif %}
-            </button>
-        </div>
+    <!-- Tabs -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="current">
+            Current Orders
+            {% if current_orders.count > 0 %}<span class="badge-num">{{ current_orders.count }}</span>{% endif %}
+        </button>
+        <button class="tab-btn" data-tab="history">
+            Order History
+            {% if order_history.count > 0 %}<span class="badge-num">{{ order_history.count }}</span>{% endif %}
+        </button>
+    </div>
 
-        <div class="tab-content active" id="current-orders">
-            <div id="current-orders-list">
-                {% if current_orders %}
-                    {% for order in current_orders %}
-                    <div class="order-card">
-                        <div class="order-header">
-                            <h3>Order #{{ order.order_id }}</h3>
-                            <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+    <!-- ─── Current Orders ─── -->
+    <div class="tab-content" id="tab-current">
+        <div class="orders-grid">
+            {% if current_orders %}
+            {% for order in current_orders %}
+            <a href="{% url 'order_detail' order.order_id %}" class="o-card-link">
+                <div class="o-card">
+                    <!-- Top -->
+                    <div class="o-card-top">
+                        <div>
+                            <div class="oid">#{{ order.order_id }}</div>
+                            <div class="odt">{{ order.created_at|date:"d M Y, g:i A" }}</div>
                         </div>
-                        <div class="order-details">
-                            <div class="delivery-info">
-                                <strong>Delivery Address:</strong> {{ order.delivery_address|truncatechars:50 }}
-                                {% if order.delivery_phone %}
-                                <br><strong>Phone:</strong> {{ order.delivery_phone }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="order-items">
-                            {% for item in order.items.all %}
-                            <div class="order-item">
-                                <span>{{ item.quantity }}x {{ item.menu_item.name }}</span>
-                                <span>₹{{ item.subtotal }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="order-total">
-                            <div class="total-breakdown">
-                                <div>Subtotal: ₹{{ order.total_amount }}</div>
-                                <div>Delivery Fee: ₹{{ order.delivery_fee }}</div>
-                                <strong>Grand Total: ₹{{ order.grand_total }}</strong>
-                            </div>
-                        </div>
-                        <div class="order-footer">
-                            <small>Ordered on {{ order.created_at|date:"F j, Y g:i A" }}</small>
-                            {% if order.payment %}
-                            <small class="payment-status">
-                                Payment: <span class="payment-{{ order.payment.payment_status }}">{{ order.payment.get_payment_status_display }}</span>
-                            </small>
+                        <span class="sbadge s-{{ order.status }}">{{ order.get_status_display }}</span>
+                    </div>
+
+                    <!-- Items with images -->
+                    <div class="o-card-items">
+                        {% for item in order.items.all|slice:":3" %}
+                        <div class="o-item">
+                            {% if item.menu_item.image_url %}
+                            <img src="{{ item.menu_item.image_url }}" alt="{{ item.menu_item.name }}"
+                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞'">
+                            {% else %}
+                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞"
+                                alt="{{ item.menu_item.name }}">
                             {% endif %}
+                            <span class="iname">{{ item.menu_item.name }}</span>
+                            <span class="iqty">×{{ item.quantity }}</span>
+                            <span class="iprice">₹{{ item.subtotal }}</span>
                         </div>
+                        {% endfor %}
+                        {% if order.items.count > 3 %}
+                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more
+                            item(s)</div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-shopping-bag"></i>
-                        <h3>No Current Orders</h3>
-                        <p>You don't have any ongoing orders at the moment.</p>
-                        <a href="{% url 'menu' %}" class="order-now-btn">Order Now</a>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
 
-        <div class="tab-content" id="order-history">
-            <div id="order-history-list">
-                {% if order_history %}
-                    {% for order in order_history %}
-                    <div class="order-card">
-                        <div class="order-header">
-                            <h3>Order #{{ order.order_id }}</h3>
-                            <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+                    <!-- Footer -->
+                    <div class="o-card-foot">
+                        <div class="foot-row">
+                            <span class="lbl">Grand Total</span>
+                            <span class="total">₹{{ order.grand_total }}</span>
                         </div>
-                        <div class="order-details">
-                            <div class="delivery-info">
-                                <strong>Delivered to:</strong> {{ order.delivery_address|truncatechars:50 }}
-                                {% if order.delivered_at %}
-                                <br><strong>Delivered on:</strong> {{ order.delivered_at|date:"F j, Y g:i A" }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="order-items">
-                            {% for item in order.items.all %}
-                            <div class="order-item">
-                                <span>{{ item.quantity }}x {{ item.menu_item.name }}</span>
-                                <span>₹{{ item.subtotal }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="order-total">
-                            <div class="total-breakdown">
-                                <div>Subtotal: ₹{{ order.total_amount }}</div>
-                                <div>Delivery Fee: ₹{{ order.delivery_fee }}</div>
-                                <strong>Grand Total: ₹{{ order.grand_total }}</strong>
-                            </div>
-                        </div>
-                        <div class="order-footer">
-                            <small>Ordered on {{ order.created_at|date:"F j, Y g:i A" }}</small>
-                            {% if order.payment %}
-                            <small class="payment-status">
-                                Payment: <span class="payment-{{ order.payment.payment_status }}">{{ order.payment.get_payment_status_display }}</span>
-                            </small>
-                            {% endif %}
-                        </div>
+                        <div class="addr-line">📍 {{ order.delivery_address|truncatechars:50 }}</div>
+                        {% if order.payment %}
+                        <span class="pay-pill pay-{{ order.payment.payment_status }}">
+                            Payment: {{ order.payment.get_payment_status_display }}
+                        </span>
+                        {% endif %}
+                        <div class="view-hint">View Details <i class="fas fa-chevron-right"></i></div>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-history"></i>
-                        <h3>No Order History</h3>
-                        <p>You haven't placed any orders yet. Start exploring our delicious menu!</p>
-                        <a href="{% url 'menu' %}" class="order-now-btn">Browse Menu</a>
-                    </div>
-                {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>No Current Orders</h3>
+                <p>You don't have any active orders right now.</p>
+                <a href="{% url 'menu' %}">Order Now</a>
             </div>
+            {% endif %}
         </div>
     </div>
-</section>
+
+    <!-- ─── Order History ─── -->
+    <div class="tab-content" id="tab-history" style="display:none;">
+        <div class="orders-grid">
+            {% if order_history %}
+            {% for order in order_history %}
+            <a href="{% url 'order_detail' order.order_id %}" class="o-card-link">
+                <div class="o-card history">
+                    <!-- Top -->
+                    <div class="o-card-top">
+                        <div>
+                            <div class="oid">#{{ order.order_id }}</div>
+                            <div class="odt">{{ order.created_at|date:"d M Y, g:i A" }}</div>
+                        </div>
+                        <span class="sbadge s-{{ order.status }}">{{ order.get_status_display }}</span>
+                    </div>
+
+                    <!-- Items with images -->
+                    <div class="o-card-items">
+                        {% for item in order.items.all|slice:":3" %}
+                        <div class="o-item">
+                            {% if item.menu_item.image_url %}
+                            <img src="{{ item.menu_item.image_url }}" alt="{{ item.menu_item.name }}"
+                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞'">
+                            {% else %}
+                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞"
+                                alt="{{ item.menu_item.name }}">
+                            {% endif %}
+                            <span class="iname">{{ item.menu_item.name }}</span>
+                            <span class="iqty">×{{ item.quantity }}</span>
+                            <span class="iprice">₹{{ item.subtotal }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if order.items.count > 3 %}
+                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more
+                            item(s)</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="o-card-foot">
+                        <div class="foot-row">
+                            <span class="lbl">Grand Total</span>
+                            <span class="total">₹{{ order.grand_total }}</span>
+                        </div>
+                        {% if order.delivered_at %}
+                        <div class="addr-line">✅ Delivered {{ order.delivered_at|date:"d M Y" }}</div>
+                        {% else %}
+                        <div class="addr-line">📍 {{ order.delivery_address|truncatechars:50 }}</div>
+                        {% endif %}
+                        {% if order.payment %}
+                        <span class="pay-pill pay-{{ order.payment.payment_status }}">
+                            Payment: {{ order.payment.get_payment_status_display }}
+                        </span>
+                        {% endif %}
+                        <div class="view-hint">View Details <i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <h3>No Order History</h3>
+                <p>You haven't placed any orders yet.</p>
+                <a href="{% url 'menu' %}">Browse Menu</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div><!-- /orders-page -->
 {% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
+        btn.addEventListener('click', function () {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            if (tab === 'current') {
-                document.getElementById('current-orders').classList.add('active');
-            } else {
-                document.getElementById('order-history').classList.add('active');
-            }
+            const tab = this.dataset.tab;
+            document.getElementById('tab-current').style.display = tab === 'current' ? 'block' : 'none';
+            document.getElementById('tab-history').style.display = tab === 'history' ? 'block' : 'none';
         });
     });
 </script>

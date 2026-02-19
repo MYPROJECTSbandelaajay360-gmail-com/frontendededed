@@ -2,73 +2,73 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/cart1.css' %}">
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="cart-container">
-        <!-- Cart Header -->
-        <div class="cart-header">
-            <h1>Your Cart</h1>
-            <span class="item-count" id="itemCount">0 items</span>
+    <!-- Cart Header -->
+    <div class="cart-header">
+        <h1>Your Cart</h1>
+        <span class="item-count" id="itemCount">0 items</span>
+    </div>
+
+    <!-- Cart Content -->
+    <div class="cart-content">
+        <!-- Empty Cart State -->
+        <div class="empty-cart" id="emptyCart">
+            <div class="empty-cart-icon">
+                <i class="ri-shopping-cart-line"></i>
+            </div>
+            <h2>Your cart is empty</h2>
+            <p>Add items from our delicious bakery menu</p>
+            <a href="{% url 'menu' %}" class="browse-menu-btn">Browse Menu</a>
         </div>
 
-        <!-- Cart Content -->
-        <div class="cart-content">
-            <!-- Empty Cart State -->
-            <div class="empty-cart" id="emptyCart">
-                <div class="empty-cart-icon">
-                    <i class="ri-shopping-cart-line"></i>
-                </div>
-                <h2>Your cart is empty</h2>
-                <p>Add items from our delicious bakery menu</p>
-                <a href="{% url 'menu' %}" class="browse-menu-btn">Browse Menu</a>
+        <!-- Cart Items -->
+        <div class="cart-items" id="cartItems" style="display: none;">
+            <!-- Cart items will be dynamically added here -->
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary" id="cartSummary" style="display: none;">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal">₹0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery Fee</span>
+                <span id="deliveryFee">₹50.00</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span id="totalAmount">₹50.00</span>
             </div>
 
-            <!-- Cart Items -->
-            <div class="cart-items" id="cartItems" style="display: none;">
-                <!-- Cart items will be dynamically added here -->
-            </div>
-
-            <!-- Cart Summary -->
-            <div class="cart-summary" id="cartSummary" style="display: none;">
-                <div class="summary-row">
-                    <span>Subtotal</span>
-                    <span id="subtotal">₹0.00</span>
-                </div>
-                <div class="summary-row">
-                    <span>Delivery Fee</span>
-                    <span id="deliveryFee">₹50.00</span>
-                </div>
-                <div class="summary-row total">
-                    <span>Total</span>
-                    <span id="totalAmount">₹50.00</span>
-                </div>
-
-                <button class="place-order-btn" id="placeOrderBtn">
-                    <i class="ri-secure-payment-line"></i>
-                    Proceed to Payment
-                </button>
-            </div>
+            <button class="place-order-btn" id="placeOrderBtn">
+                <i class="ri-secure-payment-line"></i>
+                Proceed to Payment
+            </button>
         </div>
     </div>
-    {% endblock %}
+</div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
     let cart = JSON.parse(localStorage.getItem('bakeryCart')) || {};
     const deliveryFee = 50.00;
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
         loadCartItems();
         setupEventListeners();
     });
-    
+
     function loadCartItems() {
         const emptyCart = document.getElementById('emptyCart');
         const cartItems = document.getElementById('cartItems');
         const cartSummary = document.getElementById('cartSummary');
-        
+
         if (Object.keys(cart).length === 0) {
             emptyCart.style.display = 'block';
             cartItems.style.display = 'none';
@@ -77,14 +77,14 @@
             emptyCart.style.display = 'none';
             cartItems.style.display = 'block';
             cartSummary.style.display = 'block';
-            
+
             cartItems.innerHTML = '';
             let subtotal = 0;
-            
+
             Object.values(cart).forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 subtotal += itemTotal;
-                
+
                 const cartItemDiv = document.createElement('div');
                 cartItemDiv.className = 'cart-item';
                 cartItemDiv.innerHTML = `
@@ -106,13 +106,13 @@
                 `;
                 cartItems.appendChild(cartItemDiv);
             });
-            
+
             document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
             document.getElementById('totalAmount').textContent = `₹${(subtotal + deliveryFee).toFixed(2)}`;
             document.getElementById('itemCount').textContent = `${Object.keys(cart).length} items`;
         }
     }
-    
+
     function updateQuantity(id, change) {
         if (cart[id]) {
             cart[id].quantity += change;
@@ -120,50 +120,50 @@
                 delete cart[id];
             }
             localStorage.setItem('bakeryCart', JSON.stringify(cart));
-            
+
             // Trigger cart update event
             window.dispatchEvent(new Event('cartUpdated'));
-            
+
             loadCartItems();
         }
     }
-    
+
     function removeItem(id) {
         delete cart[id];
         localStorage.setItem('bakeryCart', JSON.stringify(cart));
-        
+
         // Trigger cart update event
         window.dispatchEvent(new Event('cartUpdated'));
-        
+
         loadCartItems();
     }
-    
+
     function setupEventListeners() {
-        document.getElementById('placeOrderBtn').addEventListener('click', function() {
+        document.getElementById('placeOrderBtn').addEventListener('click', function () {
             if (Object.keys(cart).length === 0) {
                 alert('Your cart is empty! Please add items first.');
                 return;
             }
-            
+
             // Check if user is authenticated
             if (!isAuthenticated) {
                 alert('Please login to proceed with payment.');
                 window.location.href = '{% url "login" %}';
                 return;
             }
-            
+
             // Store cart summary for payment page
             const subtotal = Object.values(cart).reduce((total, item) => {
                 return total + (item.price * item.quantity);
             }, 0);
-            
+
             localStorage.setItem('orderSummary', JSON.stringify({
                 items: cart,
                 subtotal: subtotal,
                 deliveryFee: deliveryFee,
                 total: subtotal + deliveryFee
             }));
-            
+
             // Redirect to payment page
             console.log('Redirecting to payment page...');
             window.location.href = '{% url "payment" %}';

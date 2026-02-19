@@ -1,0 +1,400 @@
+{% extends 'bakery/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .detail-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 10px 20px 60px;
+    }
+
+    /* Back link */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #d2691e;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 18px;
+        transition: opacity .2s;
+    }
+
+    .back-link:hover {
+        opacity: 0.7;
+    }
+
+    /* Big header card */
+    .detail-header {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+        padding: 20px 22px;
+        margin-bottom: 14px;
+        border-left: 5px solid #d2691e;
+    }
+
+    .detail-header .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .detail-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 3px;
+    }
+
+    .detail-header .sub {
+        font-size: 13px;
+        color: #aaa;
+    }
+
+    /* Status badge */
+    .sbadge {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 14px;
+        border-radius: 14px;
+    }
+
+    .s-pending {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+
+    .s-confirmed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .s-preparing {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .s-ready {
+        background: #ede7f6;
+        color: #6a1b9a;
+    }
+
+    .s-completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .s-cancelled {
+        background: #fce4ec;
+        color: #c62828;
+    }
+
+    .s-delivered {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    /* Meta grid */
+    .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    @media (max-width: 480px) {
+        .meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .meta-box {
+        background: #fdf6ee;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.6;
+    }
+
+    .meta-box .mlabel {
+        font-size: 11px;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-bottom: 3px;
+    }
+
+    .meta-box strong {
+        color: #333;
+    }
+
+    /* Items card */
+    .items-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+
+    .items-card .card-title {
+        padding: 14px 18px 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        border-bottom: 1px solid #f5ece0;
+    }
+
+    .d-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 18px;
+        border-bottom: 1px solid #f5ece0;
+    }
+
+    .d-item:last-child {
+        border-bottom: none;
+    }
+
+    .d-item img {
+        width: 54px;
+        height: 54px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid #f0e0cc;
+        flex-shrink: 0;
+    }
+
+    .d-item .iinfo {
+        flex: 1;
+    }
+
+    .d-item .iinfo .iname {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .d-item .iinfo .icat {
+        font-size: 12px;
+        color: #aaa;
+    }
+
+    .d-item .iright {
+        text-align: right;
+    }
+
+    .d-item .iright .iqty {
+        font-size: 12px;
+        color: #bbb;
+    }
+
+    .d-item .iright .isubt {
+        font-size: 15px;
+        font-weight: 700;
+        color: #d2691e;
+    }
+
+    /* Price summary card */
+    .summary-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+        padding: 18px 20px;
+        margin-bottom: 14px;
+    }
+
+    .summary-card .card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f5ece0;
+    }
+
+    .srow {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 14px;
+        color: #555;
+        border-bottom: 1px dashed #f5ece0;
+    }
+
+    .srow:last-child {
+        border-bottom: none;
+    }
+
+    .srow.grand {
+        font-size: 17px;
+        font-weight: 700;
+        color: #d2691e;
+        border-top: 2px solid #d2691e;
+        padding-top: 10px;
+        margin-top: 6px;
+    }
+
+    /* Payment card */
+    .pay-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+        padding: 16px 20px;
+    }
+
+    .pay-card .card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f5ece0;
+    }
+
+    .pay-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #555;
+        padding: 4px 0;
+    }
+
+    .pay-status-pill {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 12px;
+    }
+
+    .pay-completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .pay-pending {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+
+    .pay-failed {
+        background: #fce4ec;
+        color: #c62828;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+    <!-- Back -->
+    <a href="{% url 'orders' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to My Orders
+    </a>
+
+    <!-- Header card -->
+    <div class="detail-header">
+        <div class="top-row">
+            <div>
+                <h2>Order #{{ order.order_id }}</h2>
+                <div class="sub">Placed on {{ order.created_at|date:"F j, Y \a\t g:i A" }}</div>
+            </div>
+            <span class="sbadge s-{{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+
+        <!-- Meta info grid -->
+        <div class="meta-grid">
+            <div class="meta-box">
+                <div class="mlabel">Delivery Address</div>
+                <strong>{{ order.delivery_address }}</strong>
+            </div>
+            {% if order.delivery_phone %}
+            <div class="meta-box">
+                <div class="mlabel">Contact Number</div>
+                <strong>{{ order.delivery_phone }}</strong>
+            </div>
+            {% endif %}
+            {% if order.delivery_notes %}
+            <div class="meta-box" style="grid-column: 1/-1;">
+                <div class="mlabel">Delivery Notes</div>
+                <strong>{{ order.delivery_notes }}</strong>
+            </div>
+            {% endif %}
+            {% if order.delivered_at %}
+            <div class="meta-box">
+                <div class="mlabel">Delivered At</div>
+                <strong>{{ order.delivered_at|date:"F j, Y \a\t g:i A" }}</strong>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Items -->
+    <div class="items-card">
+        <div class="card-title">
+            <i class="fas fa-shopping-bag" style="color:#d2691e;margin-right:6px;"></i>
+            Order Items ({{ order.items.count }})
+        </div>
+        {% for item in order.items.all %}
+        <div class="d-item">
+            {% if item.menu_item.image_url %}
+            <img src="{{ item.menu_item.image_url }}" alt="{{ item.menu_item.name }}"
+                onerror="this.src='https://via.placeholder.com/54x54/fdf6ee/d2691e?text=🍞'">
+            {% else %}
+            <img src="https://via.placeholder.com/54x54/fdf6ee/d2691e?text=🍞" alt="{{ item.menu_item.name }}">
+            {% endif %}
+            <div class="iinfo">
+                <div class="iname">{{ item.menu_item.name }}</div>
+                <div class="icat">₹{{ item.price }} each</div>
+            </div>
+            <div class="iright">
+                <div class="iqty">Qty: {{ item.quantity }}</div>
+                <div class="isubt">₹{{ item.subtotal }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Price summary -->
+    <div class="summary-card">
+        <div class="card-title">
+            <i class="fas fa-receipt" style="color:#d2691e;margin-right:6px;"></i>Price Breakdown
+        </div>
+        <div class="srow"><span>Subtotal</span><span>₹{{ order.total_amount }}</span></div>
+        <div class="srow"><span>Delivery Fee</span><span>₹{{ order.delivery_fee }}</span></div>
+        <div class="srow grand"><span>Grand Total</span><span>₹{{ order.grand_total }}</span></div>
+    </div>
+
+    <!-- Payment info -->
+    {% if order.payment %}
+    <div class="pay-card">
+        <div class="card-title">
+            <i class="fas fa-credit-card" style="color:#d2691e;margin-right:6px;"></i>Payment Info
+        </div>
+        <div class="pay-row">
+            <span>Status</span>
+            <span class="pay-status-pill pay-{{ order.payment.payment_status }}">{{
+                order.payment.get_payment_status_display }}</span>
+        </div>
+        {% if order.payment.payment_method %}
+        <div class="pay-row"><span>Method</span><span>{{ order.payment.payment_method }}</span></div>
+        {% endif %}
+        {% if order.payment.razorpay_payment_id %}
+        <div class="pay-row"><span>Transaction ID</span><span style="font-size:12px;">{{
+                order.payment.razorpay_payment_id }}</span></div>
+        {% endif %}
+        {% if order.payment.paid_at %}
+        <div class="pay-row"><span>Paid At</span><span>{{ order.payment.paid_at|date:"d M Y, g:i A" }}</span></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
