@@ -1,0 +1,63 @@
+# ============================================================
+# The Bake Story - Systemd Service File for Gunicorn
+# Copy this file to: /etc/systemd/system/bakery.service
+# ============================================================
+#
+# Installation:
+#   sudo cp bakery.service /etc/systemd/system/bakery.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable bakery
+#   sudo systemctl start bakery
+#
+# Management:
+#   sudo systemctl status bakery
+#   sudo systemctl restart bakery
+#   sudo systemctl stop bakery
+#   sudo journalctl -u bakery -f
+#
+# ============================================================
+
+[Unit]
+Description=The Bake Story - Gunicorn WSGI Application Server
+Documentation=https://docs.djangoproject.com/
+After=network.target
+
+[Service]
+Type=notify
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/bakery_project
+Environment="PATH=/home/ubuntu/bakery_project/venv/bin"
+EnvironmentFile=/home/ubuntu/bakery_project/.env
+
+# Gunicorn configuration
+ExecStart=/home/ubuntu/bakery_project/venv/bin/gunicorn \
+    bakery_project.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 3 \
+    --threads 2 \
+    --worker-class sync \
+    --worker-tmp-dir /dev/shm \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    --log-level warning \
+    --access-logfile /home/ubuntu/bakery_project/logs/access.log \
+    --error-logfile /home/ubuntu/bakery_project/logs/error.log \
+    --capture-output \
+    --enable-stdio-inheritance
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+KillMode=mixed
+TimeoutStopSec=30
+
+# Security
+PrivateTmp=true
+NoNewPrivileges=true
+
+# Resource limits (adjust as needed)
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

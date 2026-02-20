@@ -6,11 +6,12 @@ __pycache__/
 .Python
 
 # ─── Virtual Environments ─────────────────────────────────────────────────────
-env/
 venv/
 envi/
+env/
 ENV/
 .venv/
+.virtualenv/
 
 # ─── Build artifacts ──────────────────────────────────────────────────────────
 build/
