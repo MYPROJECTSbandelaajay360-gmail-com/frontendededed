@@ -12,15 +12,18 @@ echo "  The Bake Story - VPS Deployment Script"
 echo "============================================"
 
 # ─── Configuration Variables ──────────────────────────────────
-APP_DIR="/home/ubuntu/bakery_project"
+# NOTE: Adjust APP_USER if your username is different (e.g., 'ubuntuu')
+REPO_DIR="/home/ubuntu/bakery_repo"
+APP_DIR="/home/ubuntu/bakery_repo/bakery_project"
 APP_USER="ubuntu"
 APP_NAME="bakery"
-GIT_REPO="https://github.com/MYPROJECTSbandelaajay360-gmail-com/frontendededed.git"  # Update this!
+GIT_REPO="https://github.com/MYPROJECTSbandelaajay360-gmail-com/frontendededed.git"
 GIT_BRANCH="main"
 
 echo ""
 echo "Configuration:"
-echo "  App Directory: $APP_DIR"
+echo "  Repository: $REPO_DIR"
+echo "  Django App: $APP_DIR"
 echo "  App User: $APP_USER"
 echo "  App Name: $APP_NAME"
 echo ""
@@ -33,15 +36,15 @@ apt-get install -y python3 python3-pip python3-venv nginx git curl ufw certbot p
 # ─── 2. Clone or Pull Project ────────────────────────────────
 echo "[2/10] Setting up project directory..."
 
-if [ -d "$APP_DIR/.git" ]; then
+if [ -d "$REPO_DIR/.git" ]; then
     echo "  → Pulling latest changes..."
-    cd "$APP_DIR"
+    cd "$REPO_DIR"
     sudo -u $APP_USER git pull origin $GIT_BRANCH
 else
     echo "  → Cloning repository..."
-    if [ ! -d "$APP_DIR" ]; then
-        sudo -u $APP_USER git clone $GIT_REPO "$APP_DIR"
-        cd "$APP_DIR"
+    if [ ! -d "$REPO_DIR" ]; then
+        sudo -u $APP_USER git clone $GIT_REPO "$REPO_DIR"
+        cd "$REPO_DIR"
         sudo -u $APP_USER git checkout $GIT_BRANCH
     else
         echo "  → Directory exists but is not a git repo. Please check manually."
@@ -49,7 +52,7 @@ else
     fi
 fi
 
-cd "$APP_DIR"
+cd "$REPO_DIR"
 
 # ─── 3. Create Virtual Environment ───────────────────────────
 echo "[3/10] Setting up Python virtual environment..."
@@ -59,14 +62,15 @@ fi
 
 # ─── 4. Install Dependencies ──────────────────────────────────
 echo "[4/10] Installing Python dependencies..."
-sudo -u $APP_USER bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+sudo -u $APP_USER bash -c "source $REPO_DIR/venv/bin/activate && pip install --upgrade pip && pip install -r $REPO_DIR/requirements.txt"
 
 # ─── 5. Configure Environment ────────────────────────────────
 echo "[5/10] Configuring environment..."
+cd "$APP_DIR"
 
-if [ ! -f ".env" ]; then
+if [ ! -f "$APP_DIR/.env" ]; then
     echo "  → Creating .env from .env.production template..."
-    sudo -u $APP_USER cp .env.production .env
+    sudo -u $APP_USER cp "$REPO_DIR/.env.production" "$APP_DIR/.env"
     echo ""
     echo "  ⚠  IMPORTANT: Edit .env and fill in your real credentials!"
     echo "     nano $APP_DIR/.env"
@@ -77,11 +81,11 @@ fi
 
 # ─── 6. Django Setup ──────────────────────────────────────────
 echo "[6/10] Running Django setup..."
-sudo -u $APP_USER bash -c "source venv/bin/activate && cd $APP_DIR && python manage.py migrate --noinput"
-sudo -u $APP_USER bash -c "source venv/bin/activate && cd $APP_DIR && python manage.py collectstatic --noinput"
-sudo -u $APP_USER mkdir -p logs media
-sudo chown -R $APP_USER:www-data "$APP_DIR"
-sudo chmod -R 755 "$APP_DIR"
+sudo -u $APP_USER bash -c "source $REPO_DIR/venv/bin/activate && cd $APP_DIR && python3 manage.py migrate --noinput"
+sudo -u $APP_USER bash -c "source $REPO_DIR/venv/bin/activate && cd $APP_DIR && python3 manage.py collectstatic --noinput"
+sudo -u $APP_USER mkdir -p "$APP_DIR/logs" "$APP_DIR/media"
+sudo chown -R $APP_USER:www-data "$REPO_DIR"
+sudo chmod -R 755 "$REPO_DIR"
 
 # Create Django superuser (optional - run manually if needed)
 # sudo -u $APP_USER bash -c "source venv/bin/activate && cd $APP_DIR && python manage.py createsuperuser"
@@ -97,13 +101,25 @@ After=network.target
 User=$APP_USER
 Group=www-data
 WorkingDirectory=$APP_DIR
-Environment="PATH=$APP_DIR/venv/bin"
+Environment="PATH=$REPO_DIR/venv/bin"
 EnvironmentFile=$APP_DIR/.env
-ExecStart=$APP_DIR/venv/bin/gunicorn \\
+ExecStart=$REPO_DIR/venv/bin/gunicorn \\
     bakery_project.wsgi:application \\
     --bind 127.0.0.1:8000 \\
     --workers 3 \\
     --threads 2 \\
+    --timeout 120 \\
+    --log-level warning \\
+    --access-logfile $APP_DIR/logs/access.log \\
+    --error-logfile $APP_DIR/logs/error.log \\
+    --capture-output \\
+    --enable-stdio-inheritance
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
     --timeout 120 \\
     --log-level warning \\
     --access-logfile $APP_DIR/logs/access.log \\
@@ -130,7 +146,7 @@ if [ -f "/etc/nginx/sites-available/${APP_NAME}" ]; then
     cp /etc/nginx/sites-available/${APP_NAME} /etc/nginx/sites-available/${APP_NAME}.backup.$(date +%s)
 fi
 
-cp "$APP_DIR/nginx.conf" "/etc/nginx/sites-available/${APP_NAME}"
+cp "$REPO_DIR/nginx.conf" "/etc/nginx/sites-available/${APP_NAME}"
 ln -sf "/etc/nginx/sites-available/${APP_NAME}" "/etc/nginx/sites-enabled/${APP_NAME}"
 rm -f /etc/nginx/sites-enabled/default   # Remove default site
 
@@ -183,8 +199,9 @@ echo ""
 echo "============================================"
 echo "  Deployment Complete!"
 echo "============================================"
-echo "  App Directory:   $APP_DIR"
-echo "  App URL (HTTP):  http://your-domain.com (replace with actual domain)"
+echo "  Repository: $REPO_DIR"
+echo "  Django App: $APP_DIR"
+echo "  App URL:    http://thebakestory.store"
 echo ""
 echo "  Useful commands:"
 echo "  • Check gunicorn:    sudo systemctl status ${APP_NAME}"
@@ -198,8 +215,8 @@ echo "============================================"
 echo ""
 echo "Next Steps:"
 echo "  1. Configure your .env file with actual values"
-echo "  2. Update nginx.conf with your domain and IP"
-echo "  3. Create Django superuser: cd $APP_DIR && source venv/bin/activate && python manage.py createsuperuser"
-echo "  4. Set up SSL with certbot (see step 10 above)"
+echo "  2. Create Django superuser:"
+echo "     cd $APP_DIR && source $REPO_DIR/venv/bin/activate && python3 manage.py createsuperuser"
+echo "  3. Set up SSL with certbot (see step 10 above)"
 echo "============================================"
 

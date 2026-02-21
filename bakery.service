@@ -26,12 +26,12 @@ After=network.target
 Type=notify
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/bakery_project
-Environment="PATH=/home/ubuntu/bakery_project/venv/bin"
-EnvironmentFile=/home/ubuntu/bakery_project/.env
+WorkingDirectory=/home/ubuntu/bakery_repo/bakery_project
+Environment="PATH=/home/ubuntu/bakery_repo/venv/bin"
+EnvironmentFile=/home/ubuntu/bakery_repo/bakery_project/.env
 
 # Gunicorn configuration
-ExecStart=/home/ubuntu/bakery_project/venv/bin/gunicorn \
+ExecStart=/home/ubuntu/bakery_repo/venv/bin/gunicorn \
     bakery_project.wsgi:application \
     --bind 127.0.0.1:8000 \
     --workers 3 \
@@ -41,8 +41,8 @@ ExecStart=/home/ubuntu/bakery_project/venv/bin/gunicorn \
     --timeout 120 \
     --graceful-timeout 30 \
     --log-level warning \
-    --access-logfile /home/ubuntu/bakery_project/logs/access.log \
-    --error-logfile /home/ubuntu/bakery_project/logs/error.log \
+    --access-logfile /home/ubuntu/bakery_repo/bakery_project/logs/access.log \
+    --error-logfile /home/ubuntu/bakery_repo/bakery_project/logs/error.log \
     --capture-output \
     --enable-stdio-inheritance
 
