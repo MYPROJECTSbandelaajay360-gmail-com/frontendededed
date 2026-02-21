@@ -14,7 +14,7 @@
         padding-left: 30px;
         padding-right: 30px;
     }
-    
+
     #nav1 {
         display: flex;
         flex-basis: 25%;
@@ -23,17 +23,17 @@
         font-weight: 400;
         font-style: normal;
     }
-    
-    #nav1 > a {
+
+    #nav1>a {
         text-decoration: none;
     }
-    
-    #nav1 > a > h1 {
+
+    #nav1>a>h1 {
         font-size: 32px;
         color: black;
         font-family: "Pacifico", cursive;
     }
-    
+
     #nav2 {
         display: flex;
         flex-basis: 55%;
@@ -43,19 +43,19 @@
         font-size: 20px;
         font-weight: 600;
     }
-    
-    #nav2 > a {
+
+    #nav2>a {
         text-decoration: none;
         color: black;
     }
-    
-    #nav2 > a:hover {
+
+    #nav2>a:hover {
         text-decoration: none;
         color: black;
         font-size: 25px;
         font-weight: 900;
     }
-    
+
     #nav3 {
         display: flex;
         flex-basis: 10%;
@@ -64,8 +64,8 @@
         justify-content: center;
         align-items: center;
     }
-    
-    #nav3 > div {
+
+    #nav3>div {
         position: relative;
         left: -36px;
         top: -13px;
@@ -78,7 +78,7 @@
         border: 1px solid black;
         background-color: aqua;
     }
-    
+
     #nav4 {
         display: flex;
         flex-basis: 10%;
@@ -86,69 +86,71 @@
         justify-content: center;
         align-items: center;
     }
-    
-    #nav4 > a {
+
+    #nav4>a {
         text-decoration: none;
         color: black;
     }
-    
+
     .signup-wrapper {
         background: linear-gradient(135deg, #fff8dc 0%, #f5e6d3 100%);
-        min-height: calc(100vh - 15vh); /* Same as login page */
+        min-height: calc(100vh - 15vh);
+        /* Same as login page */
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 40px 20px;
         margin: 0;
     }
-    
+
     .signup-container {
         background: rgba(255, 255, 255, 0.95);
         border-radius: 20px;
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        padding: 40px;
-        max-width: 420px; /* Same width as login page */
+        padding: 25px;
+        max-width: 420px;
+        /* Same width as login page */
         width: 100%;
         margin: 0 auto;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     .signup-container h2 {
         font-family: 'Pacifico', cursive;
         color: #d2691e;
         text-align: center;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         font-size: 32px;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
+
     .signup-subtitle {
         color: #666;
         font-size: 16px;
-        margin-bottom: 35px;
+        margin-bottom: 20px;
         text-align: center;
         line-height: 1.6;
         font-weight: 400;
     }
-    
+
     .form-group {
-        margin-bottom: 25px;
+        margin-bottom: 15px;
         position: relative;
     }
-    
+
     .form-group label {
         display: block;
         color: #333;
         font-weight: 600;
-        margin-bottom: 10px;
+        margin-bottom: 4px;
         font-size: 15px;
         letter-spacing: 0.5px;
     }
-    
+
     .form-group input {
         width: 100%;
-        padding: 15px 20px;
+        padding: 10px 20px;
         border: 2px solid #e0e0e0;
         border-radius: 12px;
         font-size: 16px;
@@ -157,7 +159,7 @@
         background: #fafafa;
         color: #333;
     }
-    
+
     .form-group input:focus {
         outline: none;
         border-color: #d2691e;
@@ -165,69 +167,69 @@
         background: #fff;
         transform: translateY(-2px);
     }
-    
+
     .form-group input::placeholder {
         color: #999;
         font-style: italic;
     }
-    
+
     .btn-signup {
         width: 100%;
         background: linear-gradient(135deg, #d2691e 0%, #b8571e 100%);
         color: white;
-        padding: 18px 24px;
+        padding: 12px 24px;
         border: none;
         border-radius: 12px;
         font-size: 18px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        margin-top: 20px;
+        margin-top: 12px;
         text-transform: uppercase;
         letter-spacing: 1px;
         box-shadow: 0 6px 20px rgba(210, 105, 30, 0.3);
     }
-    
+
     .btn-signup:hover {
         background: linear-gradient(135deg, #b8571e 0%, #a0491a 100%);
         transform: translateY(-3px);
         box-shadow: 0 10px 25px rgba(210, 105, 30, 0.4);
     }
-    
+
     .btn-signup:active {
         transform: translateY(-1px);
         box-shadow: 0 5px 15px rgba(210, 105, 30, 0.3);
     }
-    
+
     .terms-links {
         text-align: center;
-        margin-top: 25px;
+        margin-top: 15px;
         font-size: 13px;
         color: #666;
         line-height: 1.5;
     }
-    
+
     .terms-links a {
         color: #d2691e;
         text-decoration: none;
         font-weight: 600;
         transition: color 0.3s ease;
     }
-    
+
     .terms-links a:hover {
         color: #b8571e;
         text-decoration: underline;
     }
-    
+
     .login-link {
         text-align: center;
-        margin-top: 30px;
-        padding-top: 25px;
+        margin-top: 18px;
+        padding-top: 12px;
         border-top: 1px solid #e0e0e0;
         color: #666;
         font-size: 15px;
     }
-    
+
     .login-link a {
         color: #d2691e;
         text-decoration: none;
@@ -235,12 +237,12 @@
         transition: all 0.3s ease;
         margin-left: 5px;
     }
-    
+
     .login-link a:hover {
         color: #b8571e;
         text-decoration: underline;
     }
-    
+
     .alert {
         padding: 15px 20px;
         border-radius: 12px;
@@ -250,56 +252,59 @@
         border: none;
         font-weight: 500;
     }
-    
+
     .alert-success {
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         color: #155724;
         border-left: 4px solid #28a745;
     }
-    
+
     .alert-error {
         background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         color: #721c24;
         border-left: 4px solid #dc3545;
     }
-    
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .signup-wrapper {
             padding: 20px 15px;
         }
-        
+
         .signup-container {
             padding: 30px 25px;
             margin: 10px;
-            max-width: 380px; /* Same as login page */
+            max-width: 380px;
+            /* Same as login page */
         }
-        
+
         .signup-container h2 {
             font-size: 28px;
         }
-        
+
         .form-group input {
             padding: 12px 16px;
-            font-size: 16px; /* Prevent zoom on iOS */
+            font-size: 16px;
+            /* Prevent zoom on iOS */
         }
-        
+
         .btn-signup {
             padding: 15px 20px;
             font-size: 16px;
         }
     }
-    
+
     @media (max-width: 480px) {
         .signup-container {
             padding: 25px 20px;
-            max-width: 340px; /* Same as login page */
+            max-width: 340px;
+            /* Same as login page */
         }
-        
+
         .signup-container h2 {
             font-size: 24px;
         }
-        
+
         .signup-subtitle {
             font-size: 14px;
         }
@@ -312,65 +317,39 @@
     <div class="signup-container">
         <h2>Join Heavenly Bakery</h2>
         <p class="signup-subtitle">Create an account and enjoy freshly baked treats delivered to your door</p>
-        
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
+
         <form method="post" id="signupForm">
             {% csrf_token %}
-            
+
             <div class="form-group">
                 <label for="fullname">Full Name</label>
-                <input 
-                    type="text" 
-                    name="fullname" 
-                    id="fullname" 
-                    placeholder="Enter your full name" 
-                    required
-                    value="{{ request.POST.fullname|default:'' }}"
-                >
+                <input type="text" name="fullname" id="fullname" placeholder="Enter your full name" required
+                    value="{{ request.POST.fullname|default:'' }}">
             </div>
-            
+
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input 
-                    type="email" 
-                    name="email" 
-                    id="email" 
-                    placeholder="Enter your email" 
-                    required
-                    value="{{ request.POST.email|default:'' }}"
-                >
+                <input type="email" name="email" id="email" placeholder="Enter your email" required
+                    value="{{ request.POST.email|default:'' }}">
             </div>
-            
+
             <div class="form-group">
                 <label for="password">Password</label>
-                <input 
-                    type="password" 
-                    name="password" 
-                    id="password" 
-                    placeholder="Create a password (min 6 characters)" 
-                    required 
-                    minlength="6"
-                >
+                <input type="password" name="password" id="password" placeholder="Create a password (min 6 characters)"
+                    required minlength="6">
             </div>
-            
+
             <button type="submit" class="btn-signup">Sign Up</button>
-            
+
             <div class="terms-links">
-                By signing up, you agree to our 
-                <a href="#">Privacy Policy</a> and 
+                By signing up, you agree to our
+                <a href="#">Privacy Policy</a> and
                 <a href="#">Terms of Service</a>
             </div>
         </form>
-        
+
         <p class="login-link">
-            Already have an account? 
+            Already have an account?
             <a href="{% url 'login' %}">Login</a>
         </p>
     </div>

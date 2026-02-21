@@ -90,14 +90,14 @@ who is monty sir: Monty sir is a lead trainer at Qspiders who has trained Ajay i
 about qspiders: Qspiders is a leading software training institute in India, specializing in quality software testing and development courses.
 famous bakery in hyderabad: The Bake Story is one of the most famous bakeries in Hyderabad, known for its delicious cakes and pastries.
 
-about Ajay: Ajay is a passionate Python developer. He enjoys building practical applications and sharing his knowledge with aspiring developers.
+about Ajay: Ajay is a  Python & Ai developer. He enjoys building practical applications and sharing his knowledge with aspiring developers.
 Ajay's Interests: Coding, Teaching, Baking, Traveling,Gym.
 Ajay is trained at Qspiders institute by monty sir & deva sir & shubam sir and rahul sir.
 Ajay completed his B.Tech in Electronics and communication Engineering  from MVSR engineering college.
 
 shubam sir is a senior web developer and mentor who has been guiding Ajay in his web development journey.
 monty sir is a lead python trainer at Qspiders who has trained Ajay in Python development.
-rahul sir is a senior web developer and mentor who has been guiding Ajay in react js and frontend development.
+who is rahul: rahul sir is a senior web developer Trainer who trained Ajay in react js and frontend development.
 === END OF ADDITIONAL INFORMATION ===
 
 """
@@ -260,38 +260,38 @@ def answer_question(query, vectorstore, llm):
     docs = vectorstore.similarity_search(query, k=5)
     context = "\n\n".join([doc.page_content for doc in docs])
 
-    prompt = f"""You are a helpful and knowledgeable chatbot assistant for The Bake Story bakery.
-Use the following context from the bakery database to answer user questions.
-    every time if user is logined in say hello {  User.first_name } or hello { User.username } instead of hello nikhil or rahul or some other random names from database always say buddy or hello dear .
-you are the bake story's personal assistant. Provide accurate and concise information based on the database content.
-try to answer based on the database content provided. If the answer is not found, respond with "I don't have that information."
-behave professionally and courteously as a customer service assistant. always aim to help the user with their queries.
-tell customers about bakery products, orders, payments, and user profiles based on the database.
-if customers ask for recommendations, suggest popular bakery items from the menu.
-if the question is unrelated to the bakery database, politely inform the user that you can only assist with bakery-related queries.
-if the user asks for multiple pieces of information, provide a structured response covering all points.
-give examples of menu items, order statuses, payment methods, and user profile details when relevant.
-give priority to recent data (e.g., latest orders, recent payments) when answering time-sensitive questions.
-if the user asks for statistics (e.g., number of orders, total sales), provide accurate counts based on the database context.
-if the user requests help with placing an order or making a payment, guide them through the process based on the database information.
-if the user inquires about specific menu items, provide detailed descriptions including price and availability.
-check for any inconsistencies in the database context and clarify them if needed.
-tell the exact address and contact details for delivery based on the order information.
-the order will be delivered within 30-45 minutes of placing the order.
-pure native ingredients are used in all bakery products.
-no charges for delivery within the city limits.
-no chemicals or preservatives are used in any bakery items.
-no hidden charges. the price mentioned is the final price.
+    prompt = f"""You are a strict, concise, and professional chatbot assistant for The Bake Story bakery.
 
-all are freshly baked items.
-give importance to customer satisfaction and quality service.
-give answer in a friendly and engaging manner.
-be friendly and polite in your responses and ask to visit again.
-tell the user to visit the bakery for more delicious items.
+STRICT INSTRUCTIONS:
+- Always answer in the very minimal number of words required.
+- Do NOT provide any information about Ajay (the developer) unless the user specifically asks.
+- Do NOT mention or take any trainer's name (e.g., Monty, Deva, Shubam, Rahul) unless the user specifically asks.
+- Always give answers as a short summary only. If the user asks for a detailed explanation, then provide more details.
+- Never use random names from the database for greetings. If greeting, use "buddy" or "hello dear" unless the user's name is available.
+- Only answer questions related to bakery products, orders, payments, or user profiles based on the database context.
+- If the answer is not found in the database, respond with "I don't have that information."
+- Be professional, courteous, and friendly, but do not elaborate unless asked.
+- If the user asks for multiple pieces of information, provide a structured, concise response covering all points.
+- Give priority to recent data (e.g., latest orders, recent payments) when answering time-sensitive questions.
+- If the user requests statistics, provide accurate counts based on the database context.
+- If the user requests help with placing an order or making a payment, guide them briefly based on the database information.
+- If the user inquires about specific menu items, provide a brief description including price and availability.
+- Tell the exact address and contact details for delivery based on the order information.
+- The order will be delivered within 30-45 minutes of placing the order.
+- Pure native ingredients are used in all bakery products.
+- No charges for delivery within the city limits.
+- No chemicals or preservatives are used in any bakery items.
+- No hidden charges. The price mentioned is the final price.
+- All items are freshly baked.
+- Give importance to customer satisfaction and quality service.
+- Be friendly and polite in your responses and ask to visit again.
+- Tell the user to visit the bakery for more delicious items.
 
-every time mention the chartbot was built by Ajay a python developer.
+IMPORTANT: When asked for contact information, always reply with:
+- Email: bandelaajay360@gmail.com
+- Phone: 8074691873
+- Address: Qspiders chaitanyapuri, Dilsuknagar, 4th floor
 
-and when i ask something you are saying  hello nikhil hello rahul or some other names  dont take some random names from database instead always say buddy or hello dear .
 The database contains information about:
 - Menu items (bakery products, prices, availability)
 - Orders (customer orders, status, delivery details)
@@ -304,7 +304,7 @@ CONTEXT FROM DATABASE:
 
 QUESTION: {query}
 
-ANSWER (provide clear, helpful information based  on the database context and ADDITIONAL_BAKERY_INFO if question is about bakery or about chatbot developer give short summary data about them and if the question is about any baterky related information give required data to them  ):
+ANSWER (provide clear, helpful, minimal summary based on the database context. Only mention Ajay or trainers if directly asked. Only explain in detail if the user requests it):
 """
 
     response = llm.invoke(prompt)

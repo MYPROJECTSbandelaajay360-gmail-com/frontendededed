@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Premium Café</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Welcome to Our Bakery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -15,7 +16,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fdfaf6;
+            background: linear-gradient(135deg, #fdf6ee 0%, #faf5f0 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,69 +25,175 @@
         }
 
         .container {
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
         }
 
         .welcome-card {
             background: white;
-            border-radius: 24px;
-            padding: 40px 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 10px 40px rgba(139, 69, 19, 0.12);
             text-align: center;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: #8d6e63;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #d2691e 0%, #8b4513 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 48px;
             color: white;
+            box-shadow: 0 6px 20px rgba(210, 105, 30, 0.25);
         }
 
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            color: #3e2723;
+            font-family: 'Pacifico', cursive;
+            font-size: 40px;
+            font-weight: 400;
+            color: #333;
+            margin-bottom: 8px;
         }
 
         .table-info {
-            background: #efebe9;
-            color: #3e2723;
+            background: #fdf6ee;
+            color: #333;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-left: 4px solid #d2691e;
         }
 
         .table-number {
-            color: #8d6e63;
+            color: #d2691e;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #866;
+            font-size: 16px;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: white;
+            border: 2px solid #f5ece0;
+            border-radius: 14px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .option-btn:hover {
-            border-color: #8d6e63;
+            border-color: #d2691e;
+            background: #fdf6ee;
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(210, 105, 30, 0.15);
+        }
+
+        .option-content {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex: 1;
+            text-align: left;
         }
 
         .option-icon {
-            background: #8d6e63;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
             color: white;
+            flex-shrink: 0;
+        }
+
+        .option-text h3 {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .option-text p {
+            font-size: 14px;
+            color: #777;
         }
 
         .arrow {
-            color: #8d6e63;
+            font-size: 24px;
+            color: #d2691e;
+            transition: transform 0.3s ease;
+        }
+
+        .option-btn:hover .arrow {
+            transform: translateX(4px);
+        }
+
+        .footer {
+            padding-top: 24px;
+            border-top: 1px solid #f5ece0;
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .welcome-card {
+                padding: 40px 28px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .logo {
+                width: 80px;
+                height: 80px;
+                font-size: 38px;
+            }
+
+            .option-text h3 {
+                font-size: 16px;
+            }
+
+            .option-text p {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="welcome-card">
-            <div class="logo">☕</div>
-            <h1>Welcome to Premium Café</h1>
+            <div class="logo">🍰</div>
+            <h1>Welcome to Our Bakery</h1>
             
             {% if table_number %}
             <div class="table-info">
-                Table <span class="table-number">{{ table_number }}</span>
+                <i class="fas fa-chair"></i> Table <span class="table-number">{{ table_number }}</span>
             </div>
             {% endif %}
             
@@ -99,11 +206,11 @@
                     <div class="option-content">
                         <div class="option-icon">🤖</div>
                         <div class="option-text">
-                            <h3>Order with AI Assistant</h3>
+                            <h3>AI Order Assistant</h3>
                             <p>Get personalized recommendations and quick ordering</p>
                         </div>
                     </div>
-                    <div class="arrow">→</div>
+                    <div class="arrow"><i class="fas fa-arrow-right"></i></div>
                 </a>
 
                 <a href="{% url 'menu' %}?table={{ table_number }}&mode=browse" class="option-btn">
@@ -114,12 +221,12 @@
                             <p>Explore our full menu and add items manually</p>
                         </div>
                     </div>
-                    <div class="arrow">→</div>
+                    <div class="arrow"><i class="fas fa-arrow-right"></i></div>
                 </a>
             </div>
 
             <div class="footer">
-                <p>Need help? Call our staff or use the AI assistant</p>
+                <p><i class="fas fa-phone"></i> Need help? Call our staff or use the AI assistant</p>
             </div>
         </div>
     </div>

@@ -7,6 +7,7 @@ from django.db.models import Prefetch, Sum, Count, Q
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 from django.core.mail import send_mail
 from .models import MenuItem, Order, OrderItem, Payment, UserProfile, Table
 import json
@@ -80,6 +81,76 @@ def chatbot_order_view(request):
 def admin_dashboard_view(request):
     """Admin dashboard for managing orders"""
     return render(request, 'bakery/admin_dashboard_v2.html')
+
+
+def admin_stats_api(request):
+    """API endpoint for admin dashboard stats"""
+    from django.utils import timezone
+    from django.db.models import Q
+    from datetime import timedelta
+    
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+    
+    # Today's orders
+    today_orders = Order.objects.filter(created_at__date=today)
+    today_completed = today_orders.filter(status='completed')
+    today_revenue = today_orders.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # Yesterday's orders
+    yesterday_orders = Order.objects.filter(created_at__date=yesterday)
+    yesterday_revenue = yesterday_orders.filter(status='completed').aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    
+    # Active orders (not completed/cancelled)
+    active_orders = Order.objects.filter(
+        ~Q(status__in=['completed', 'cancelled', 'served'])
+    ).order_by('-created_at')
+    
+    # Calculate revenue change percentage
+    revenue_change = 0
+    if yesterday_revenue > 0:
+        revenue_change = ((float(today_revenue) - float(yesterday_revenue)) / float(yesterday_revenue)) * 100
+    elif today_revenue > 0:
+        revenue_change = 100
+    
+    # Calculate average preparation time
+    completed_with_times = Order.objects.filter(
+        status='completed',
+        created_at__date=today,
+        ready_at__isnull=False
+    )
+    
+    if completed_with_times.exists():
+        total_time = sum([(order.ready_at - order.created_at).total_seconds() for order in completed_with_times])
+        avg_seconds = total_time / completed_with_times.count()
+        avg_minutes = int(avg_seconds / 60)
+        avg_time = f"{avg_minutes}m"
+    else:
+        avg_time = "--"
+    
+    # Prepare orders data
+    orders_data = []
+    for order in active_orders[:10]:  # Last 10 active orders
+        orders_data.append({
+            'order_id': order.order_id,
+            'customer': order.customer_name or (order.user.get_full_name() if order.user else 'Guest'),
+            'status': order.status,
+            'amount': str(order.total_amount),
+            'type': order.get_order_type_display(),
+            'table': str(order.table.table_number) if order.table else 'N/A',
+            'time': order.created_at.strftime('%H:%M'),
+        })
+    
+    return JsonResponse({
+        'today_revenue': float(today_revenue),
+        'yesterday_revenue': float(yesterday_revenue),
+        'revenue_change': revenue_change,
+        'active_orders_count': active_orders.count(),
+        'completed_today': today_completed.count(),
+        'total_today': today_orders.count(),
+        'avg_time': avg_time,
+        'orders': orders_data
+    })
 
 
 def kitchen_portal_view(request):

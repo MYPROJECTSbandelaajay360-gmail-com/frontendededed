@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kitchen Portal - Order Management</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -16,19 +16,19 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #f8f9fa;
-            color: #2d3748;
+            background: #fdf6ee;
+            color: #333;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            background: linear-gradient(135deg, #d2691e 0%, #8b4513 100%);
             color: white;
             padding: 20px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -41,8 +41,9 @@
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
+            font-family: 'Pacifico', cursive;
+            font-size: 28px;
+            font-weight: 400;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -50,17 +51,17 @@
 
         .logo i {
             font-size: 32px;
-            color: #B8935E;
+            color: #fff8dc;
         }
 
         .kitchen-badge {
-            background: rgba(184, 147, 94, 0.2);
+            background: rgba(255, 248, 220, 0.2);
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
-            border: 1px solid #B8935E;
-            color: #D4B896;
+            border: 1px solid #fff8dc;
+            color: #fff8dc;
         }
 
         .header-right {
@@ -81,7 +82,7 @@
 
         .live-time .date {
             font-size: 13px;
-            color: #a0aec0;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .staff-info {
@@ -89,7 +90,7 @@
             align-items: center;
             gap: 12px;
             padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 12px;
         }
 
@@ -97,7 +98,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #B8935E, #D4B896);
+            background: #fff8dc;
+            color: #d2691e;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -111,17 +113,17 @@
 
         .staff-details p {
             font-size: 12px;
-            color: #a0aec0;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         /* Stats Bar */
         .stats-bar {
             background: white;
-            padding: 20px 32px;
+            padding: 24px 32px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.08);
         }
 
         .stat-item {
@@ -141,35 +143,35 @@
         }
 
         .stat-item.pending .stat-icon {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #b45309;
+            background: #fef3e8;
+            color: #d2691e;
         }
 
         .stat-item.preparing .stat-icon {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1e40af;
+            background: #f5ece0;
+            color: #8b4513;
         }
 
         .stat-item.ready .stat-icon {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            color: #065f46;
+            background: #e8f5e9;
+            color: #4caf50;
         }
 
         .stat-item.completed .stat-icon {
-            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-            color: #4338ca;
+            background: #f3f4f6;
+            color: #888;
         }
 
         .stat-details h3 {
             font-size: 32px;
-            font-weight: 800;
-            color: #2d3748;
+            font-weight: 700;
+            color: #333;
             margin-bottom: 4px;
         }
 
         .stat-details p {
             font-size: 13px;
-            color: #718096;
+            color: #777;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -181,74 +183,78 @@
 
         .section-header {
             margin-bottom: 24px;
+            text-align: center;
         }
 
         .section-header h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
+            font-family: 'Pacifico', cursive;
+            font-size: 28px;
+            font-weight: 400;
+            color: #333;
             margin-bottom: 8px;
         }
 
         .section-header p {
             font-size: 14px;
-            color: #718096;
+            color: #8b4513;
         }
 
         /* Orders Grid */
         .orders-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
         }
 
         .order-card {
             background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
-            border-left: 4px solid transparent;
+            border-top: 4px solid #d2691e;
         }
 
         .order-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 8px 20px rgba(210, 105, 30, 0.18);
         }
 
         .order-card.pending {
-            border-left-color: #f59e0b;
+            border-top-color: #d2691e;
         }
 
         .order-card.confirmed {
-            border-left-color: #3b82f6;
+            border-top-color: #d2691e;
         }
 
         .order-card.preparing {
-            border-left-color: #8b5cf6;
+            border-top-color: #8b4513;
         }
 
         .order-card.ready {
-            border-left-color: #10b981;
+            border-top-color: #4caf50;
         }
 
         .order-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f5ece0;
         }
 
         .order-number {
-            font-size: 20px;
-            font-weight: 800;
-            color: #2d3748;
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
             margin-bottom: 4px;
         }
 
         .order-time {
-            font-size: 13px;
-            color: #718096;
+            font-size: 12px;
+            color: #999;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -257,57 +263,60 @@
         .order-type-badge {
             padding: 6px 14px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
         .order-type-badge.dine-in {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1e40af;
+            background: #fef3e8;
+            color: #d2691e;
+            border: 1px solid #d2691e;
         }
 
         .order-type-badge.takeaway {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #b45309;
+            background: #f5ece0;
+            color: #8b4513;
+            border: 1px solid #8b4513;
         }
 
         .order-type-badge.delivery {
-            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-            color: #4338ca;
+            background: #fff8dc;
+            color: #cd853f;
+            border: 1px solid #cd853f;
         }
 
         .table-info {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 16px;
-            background: #f9fafb;
+            padding: 10px 14px;
+            background: #fdf6ee;
             border-radius: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         .table-info i {
-            font-size: 18px;
-            color: #B8935E;
+            font-size: 16px;
+            color: #d2691e;
         }
 
         .table-info span {
             font-size: 14px;
             font-weight: 600;
-            color: #2d3748;
+            color: #333;
         }
 
         .customer-info {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             padding: 12px;
-            background: #f9fafb;
+            background: #fdf6ee;
             border-radius: 10px;
         }
 
         .customer-info p {
             font-size: 13px;
-            color: #4b5563;
+            color: #666;
             margin-bottom: 4px;
         }
 
@@ -316,27 +325,27 @@
         }
 
         .customer-info strong {
-            color: #2d3748;
+            color: #333;
         }
 
         .order-items {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .order-items h4 {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
-            color: #6b7280;
+            color: #8b4513;
             text-transform: uppercase;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             letter-spacing: 0.5px;
         }
 
         .item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f3f4f6;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5ece0;
         }
 
         .item:last-child {
@@ -345,27 +354,27 @@
 
         .item-name {
             font-size: 14px;
-            color: #2d3748;
+            color: #333;
             font-weight: 500;
         }
 
         .item-qty {
             font-size: 13px;
-            color: #6b7280;
+            color: #777;
         }
 
         .order-total {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
-            border-top: 2px solid #e5e7eb;
-            margin-bottom: 20px;
+            border-top: 2px solid #f5ece0;
+            margin-bottom: 16px;
         }
 
         .order-total span {
             font-size: 18px;
-            font-weight: 800;
-            color: #2d3748;
+            font-weight: 700;
+            color: #d2691e;
         }
 
         .order-actions {
@@ -378,7 +387,7 @@
             padding: 12px;
             border: none;
             border-radius: 10px;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
@@ -389,52 +398,53 @@
         }
 
         .action-btn.confirm {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: #d2691e;
             color: white;
         }
 
         .action-btn.confirm:hover {
+            background: #cd853f;
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
 
         .action-btn.preparing {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            background: #8b4513;
             color: white;
         }
 
         .action-btn.preparing:hover {
+            background: #a0522d;
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
         }
 
         .action-btn.ready {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: #4caf50;
             color: white;
         }
 
         .action-btn.ready:hover {
+            background: #66bb6a;
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
         }
 
         .action-btn.complete {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            background: #d2691e;
             color: white;
         }
 
         .action-btn.complete:hover {
+            background: #cd853f;
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
         .action-btn.reject {
-            background: #fee2e2;
-            color: #dc2626;
+            background: #fef3e8;
+            color: #d2691e;
+            border: 1px solid #d2691e;
         }
 
         .action-btn.reject:hover {
-            background: #fecaca;
+            background: #fff8dc;
         }
 
         /* Empty State */
@@ -442,25 +452,27 @@
             text-align: center;
             padding: 80px 20px;
             background: white;
-            border-radius: 16px;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         }
 
         .empty-state i {
             font-size: 80px;
-            color: #d1d5db;
+            color: #ddd;
             margin-bottom: 24px;
         }
 
         .empty-state h3 {
+            font-family: 'Pacifico', cursive;
             font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
+            font-weight: 400;
+            color: #333;
             margin-bottom: 12px;
         }
 
         .empty-state p {
             font-size: 16px;
-            color: #6b7280;
+            color: #777;
         }
 
         /* Notification Toast */
@@ -471,7 +483,8 @@
             background: white;
             padding: 16px 24px;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(139, 69, 19, 0.2);
+            border-left: 4px solid #d2691e;
             display: none;
             align-items: center;
             gap: 12px;
@@ -500,10 +513,15 @@
 
             .stats-bar {
                 grid-template-columns: 1fr;
+                padding: 16px;
             }
 
             .orders-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 16px;
             }
         }
     </style>
@@ -596,7 +614,7 @@
 
     <!-- Toast Notification -->
     <div class="toast" id="toast">
-        <i class="fas fa-check-circle" style="color: #10b981; font-size: 24px;"></i>
+        <i class="fas fa-check-circle" style="color: #4caf50; font-size: 24px;"></i>
         <span id="toastMessage">Order updated successfully!</span>
     </div>
 
@@ -790,10 +808,10 @@
             
             if (type === 'success') {
                 icon.className = 'fas fa-check-circle';
-                icon.style.color = '#10b981';
+                icon.style.color = '#4caf50';
             } else {
                 icon.className = 'fas fa-exclamation-circle';
-                icon.style.color = '#ef4444';
+                icon.style.color = '#d2691e';
             }
             
             toast.classList.add('show');

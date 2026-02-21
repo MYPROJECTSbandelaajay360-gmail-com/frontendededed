@@ -241,669 +241,761 @@
             font-size: 16px;
         }
 
-/* hello cssschatbot cssss */
-/* Chatbot CSS - Paste your CSS code here */
-/* ========================================
+        /* hello cssschatbot cssss */
+        /* Chatbot CSS - Paste your CSS code here */
+        /* ========================================
    FLOATING CHATBOT WIDGET STYLES
    Hospital-inspired AI Chatbot Interface
    ======================================== */
 
-/* Chatbot Toggle Button */
-.chatbot-toggle {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 8px 25px rgba(210, 105, 30, 0.4);
-    border: 3px solid #fff;
-    transition: all 0.3s ease;
-    z-index: 10000;
-    animation: pulse 2s infinite;
-}
+        /* Chatbot Toggle Button */
+        .chatbot-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(210, 105, 30, 0.4);
+            border: 3px solid #fff;
+            transition: all 0.3s ease;
+            z-index: 10000;
+            animation: pulse 2s infinite;
+        }
 
-.chatbot-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 35px rgba(210, 105, 30, 0.6);
-}
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(210, 105, 30, 0.6);
+        }
 
-.chatbot-toggle i {
-    font-size: 35px;
-    color: white;
-}
+        .chatbot-toggle i {
+            font-size: 35px;
+            color: white;
+        }
 
-.chatbot-toggle .notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff3838;
-    color: white;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    border: 2px solid white;
-    animation: bounce 1s infinite;
-}
+        .chatbot-toggle .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3838;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+            animation: bounce 1s infinite;
+        }
 
-@keyframes pulse {
-    0%, 100% {
-        box-shadow: 0 8px 25px rgba(210, 105, 30, 0.4);
-    }
-    50% {
-        box-shadow: 0 8px 35px rgba(210, 105, 30, 0.7),
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 25px rgba(210, 105, 30, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 8px 35px rgba(210, 105, 30, 0.7),
                     0 0 0 10px rgba(210, 105, 30, 0.1);
-    }
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-/* Chatbot Container */
-.chatbot-container {
-    position: fixed;
-    bottom: 120px;
-    right: 30px;
-    width: 350px;
-    height: 450px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    z-index: 9999;
-    animation: slideUp 0.4s ease;
-}
-
-.chatbot-container.active {
-    display: flex;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Chatbot Header */
-.chatbot-header {
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    padding: 12px 20px;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.chatbot-header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.bot-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.bot-info h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.bot-info p {
-    margin: 3px 0 0;
-    font-size: 12px;
-    opacity: 0.9;
-}
-
-.bot-status {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #4caf50;
-    border-radius: 50%;
-    margin-right: 5px;
-    animation: blink 2s infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-
-.chatbot-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.chatbot-actions button {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chatbot-actions button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
-
-/* Quick Actions Panel */
-.quick-actions {
-    padding: 10px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-}
-
-.quick-action-btn {
-    background: white;
-    border: 1px solid #e0e0e0;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    color: #333;
-}
-
-.quick-action-btn:hover {
-    background: #d2691e;
-    color: white;
-    border-color: #d2691e;
-    transform: translateY(-2px);
-}
-
-.quick-action-btn i {
-    margin-right: 5px;
-}
-
-/* Chat Messages Area */
-.chatbot-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
-    scroll-behavior: smooth;
-}
-
-.chatbot-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.chatbot-messages::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.chatbot-messages::-webkit-scrollbar-thumb {
-    background: #d2691e;
-    border-radius: 3px;
-}
-
-.message {
-    display: flex;
-    margin-bottom: 20px;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.message.bot {
-    justify-content: flex-start;
-}
-
-.message.user {
-    justify-content: flex-end;
-}
-
-.message-avatar {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.message.bot .message-avatar {
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    color: white;
-    margin-right: 10px;
-}
-
-.message.user .message-avatar {
-    background: #fff3e0;
-    color: #d2691e;
-    margin-left: 10px;
-}
-
-.message-content {
-    max-width: 70%;
-}
-
-.message-bubble {
-    padding: 12px 16px;
-    border-radius: 18px;
-    word-wrap: break-word;
-    line-height: 1.5;
-    font-size: 14px;
-}
-
-.message.bot .message-bubble {
-    background: white;
-    color: #333;
-    border: 1px solid #e0e0e0;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.message.user .message-bubble {
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-
-.message-time {
-    font-size: 11px;
-    color: #999;
-    margin-top: 5px;
-    padding: 0 5px;
-}
-
-/* Typing Indicator */
-.typing-indicator {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.typing-indicator.active {
-    display: flex;
-}
-
-.typing-indicator .message-avatar {
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    color: white;
-}
-
-.typing-dots {
-    background: white;
-    border: 1px solid #e0e0e0;
-    padding: 12px 16px;
-    border-radius: 18px;
-    display: flex;
-    gap: 4px;
-}
-
-.typing-dots span {
-    width: 8px;
-    height: 8px;
-    background: #d2691e;
-    border-radius: 50%;
-    animation: typing 1.4s infinite;
-}
-
-.typing-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.typing-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes typing {
-    0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: 0.7;
-    }
-    30% {
-        transform: translateY(-10px);
-        opacity: 1;
-    }
-}
-
-/* Suggested Actions */
-.suggested-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.suggested-action {
-    background: white;
-    border: 1px solid #d2691e;
-    color: #d2691e;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.suggested-action:hover {
-    background: #d2691e;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
-}
-
-/* Product Card in Chat */
-.product-card {
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 8px;
-    display: flex;
-    gap: 12px;
-    overflow: hidden;
-}
-
-.product-card img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.product-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.product-info h4 {
-    margin: 0 0 5px;
-    font-size: 14px;
-    color: #333;
-}
-
-.product-info p {
-    margin: 0;
-    font-size: 12px;
-    color: #666;
-    flex-grow: 1;
-}
-
-.product-price {
-    font-size: 16px;
-    font-weight: bold;
-    color: #d2691e;
-    margin: 5px 0;
-}
-
-.product-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-    width: 100%;
-}
-
-.product-actions button {
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.btn-order {
-    background: #d2691e;
-    color: white;
-}
-
-.btn-order:hover {
-    background: #cd853f;
-    transform: scale(1.05);
-}
-
-.btn-view {
-    background: white;
-    color: #d2691e;
-    border: 1px solid #d2691e;
-}
-
-.btn-view:hover {
-    background: #fff5f5;
-}
-
-/* Chat Input Area */
-.chatbot-input {
-    padding: 15px 20px;
-    background: white;
-    border-top: 1px solid #e0e0e0;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.input-wrapper {
-    flex: 1;
-    position: relative;
-}
-
-.chatbot-input input {
-    width: 100%;
-    padding: 12px 45px 12px 15px;
-    border: 1px solid #e0e0e0;
-    border-radius: 25px;
-    font-size: 14px;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.chatbot-input input:focus {
-    border-color: #d2691e;
-    box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.1);
-}
-
-.chatbot-input input::placeholder {
-    color: #999;
-}
-
-.attach-btn {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    font-size: 18px;
-    transition: all 0.3s ease;
-}
-
-.attach-btn:hover {
-    color: #d2691e;
-}
-
-.send-btn {
-    background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
-    border: none;
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.send-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
-}
-
-.send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Welcome Screen */
-.welcome-screen {
-    text-align: center;
-    padding: 40px 20px;
-    color: #666;
-}
-
-.welcome-screen i {
-    font-size: 60px;
-    color: #d2691e;
-    margin-bottom: 20px;
-}
-
-.welcome-screen h3 {
-    color: #333;
-    margin: 0 0 10px;
-}
-
-.welcome-screen p {
-    margin: 0 0 20px;
-    font-size: 14px;
-}
-
-.welcome-features {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-top: 30px;
-    text-align: left;
-}
-
-.feature-item {
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
-}
-
-.feature-item i {
-    font-size: 24px;
-    color: #d2691e;
-    margin-bottom: 10px;
-}
-
-.feature-item h4 {
-    margin: 0 0 5px;
-    font-size: 14px;
-    color: #333;
-}
-
-.feature-item p {
-    margin: 0;
-    font-size: 12px;
-    color: #666;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .chatbot-container {
-        width: 100%;
-        height: 100%;
-        bottom: 0;
-        right: 0;
-        border-radius: 0;
-    }
-    
-    .chatbot-toggle {
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-    }
-    
-    .chatbot-toggle i {
-        font-size: 28px;
-    }
-    
-    .welcome-features {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Error Message */
-.error-message {
-    background: #ffebee;
-    color: #c62828;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin: 10px 0;
-    border-left: 3px solid #c62828;
-}
-
-/* Success Message */
-.success-message {
-    background: #e8f5e9;
-    color: #2e7d32;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin: 10px 0;
-    border-left: 3px solid #2e7d32;
-}
-
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Chatbot Container */
+        .chatbot-container {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 350px;
+            height: 450px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9999;
+            animation: slideUp 0.4s ease;
+        }
+
+        .chatbot-container.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Chatbot Header */
+        .chatbot-header {
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            padding: 12px 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chatbot-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .bot-info h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .bot-info p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .bot-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .chatbot-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-actions button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-actions button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Quick Actions Panel */
+        .quick-actions {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .quick-action-btn:hover {
+            background: #d2691e;
+            color: white;
+            border-color: #d2691e;
+            transform: translateY(-2px);
+        }
+
+        .quick-action-btn i {
+            margin-right: 5px;
+        }
+
+        /* Chat Messages Area */
+        .chatbot-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            scroll-behavior: smooth;
+        }
+
+        .chatbot-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chatbot-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chatbot-messages::-webkit-scrollbar-thumb {
+            background: #d2691e;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .message.user .message-avatar {
+            background: #fff3e0;
+            color: #d2691e;
+            margin-left: 10px;
+        }
+
+        .message-content {
+            max-width: 70%;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            padding: 0 5px;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-indicator .message-avatar {
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            color: white;
+        }
+
+        .typing-dots {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 12px 16px;
+            border-radius: 18px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #d2691e;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* Suggested Actions */
+        .suggested-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .suggested-action {
+            background: white;
+            border: 1px solid #d2691e;
+            color: #d2691e;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggested-action:hover {
+            background: #d2691e;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(210, 105, 30, 0.3);
+        }
+
+        /* Product Card in Chat */
+        .product-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .product-card img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .product-info {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .product-info h4 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .product-info p {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .product-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d2691e;
+            margin: 8px 0 12px;
+        }
+
+        .product-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .product-actions button {
+            width: 100%;
+            max-width: 250px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-order {
+            background: #d2691e;
+            color: white;
+        }
+
+        .btn-order:hover {
+            background: #cd853f;
+            transform: scale(1.05);
+        }
+
+        .btn-view {
+            background: white;
+            color: #d2691e;
+            border: 1px solid #d2691e;
+        }
+
+        .btn-view:hover {
+            background: #fff5f5;
+        }
+
+        /* Chat Input Area */
+        .chatbot-input {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chatbot-input input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-input input:focus {
+            border-color: #d2691e;
+            box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.1);
+        }
+
+        .chatbot-input input::placeholder {
+            color: #999;
+        }
+
+        .attach-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .attach-btn:hover {
+            color: #d2691e;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Welcome Screen */
+        .welcome-screen {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-screen i {
+            font-size: 60px;
+            color: #d2691e;
+            margin-bottom: 20px;
+        }
+
+        .welcome-screen h3 {
+            color: #333;
+            margin: 0 0 10px;
+        }
+
+        .welcome-screen p {
+            margin: 0 0 20px;
+            font-size: 14px;
+        }
+
+        .welcome-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-item i {
+            font-size: 24px;
+            color: #d2691e;
+            margin-bottom: 10px;
+        }
+
+        .feature-item h4 {
+            margin: 0 0 5px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .feature-item p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+
+            .chatbot-toggle {
+                bottom: 20px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .chatbot-toggle i {
+                font-size: 28px;
+            }
+
+            .welcome-features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin: 10px 0;
+            border-left: 3px solid #c62828;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin: 10px 0;
+            border-left: 3px solid #2e7d32;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-notification {
+            background: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            pointer-events: auto;
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 4px solid #d2691e;
+            min-width: 200px;
+        }
+
+        .toast-notification.success {
+            border-left-color: #2e7d32;
+        }
+
+        .toast-notification.error {
+            border-left-color: #e74c3c;
+        }
+
+        .toast-notification.info {
+            border-left-color: #3498db;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .toast-notification.fade-out {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -976,7 +1068,19 @@
                         </div>
                     </div>
                     {% else %}
-                    <a href="{% url 'login' %}" class="login-icon"><i class="fa-solid fa-circle-user"></i></a>
+                    <div class="profile-trigger" id="guestTrigger">
+                        <div class="login-icon"><i class="fa-solid fa-circle-user"></i></div>
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </div>
+                    <!-- Guest Dropdown Card -->
+                    <div class="profile-dropdown-menu" id="guestDropdown">
+                        <div class="profile-links">
+                            <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                            <a href="{% url 'signup' %}"><i class="fas fa-user-plus"></i> Sign Up</a>
+                            <a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a>
+                            <a href="{% url 'contact' %}"><i class="fas fa-phone-alt"></i> Contact Us</a>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </aside>
@@ -1093,8 +1197,49 @@
     {% endblock %}
 
     <script>
+        const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
         const csrftoken = '{{ csrf_token }}';
-        const isAuthenticated = {% if user.is_authenticated %}true{% else %} false{% endif %};
+
+        function showToast(message, type = 'info') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.innerHTML = `
+            <div class="toast-icon">
+                ${type === 'success' ? '<i class="fas fa-check-circle"></i>' :
+                    type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
+                        '<i class="fas fa-info-circle"></i>'}
+            </div>
+            <div class="toast-message">${message}</div>
+        `;
+            container.appendChild(toast);
+
+
+            // Remove after 2 seconds
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        // Process Django Messages
+        document.addEventListener('DOMContentLoaded', function () {
+            {% if messages %}
+            {% for message in messages %}
+            let type = 'info';
+            {% if message.tags == 'success' %} type = 'success';
+            {% elif message.tags == 'error' or message.tags == 'danger' %} type = 'error';
+            {% endif %}
+            showToast('{{ message|escapejs }}', type);
+            {% endfor %}
+            {% endif %}
+        });
 
         function updateCartDisplay() {
             console.log('=== BASE updateCartDisplay called ===');
@@ -1177,22 +1322,34 @@
 
         // Profile Dropdown Toggle Logic
         document.addEventListener('DOMContentLoaded', function () {
-            const profileTrigger = document.getElementById('profileTrigger');
-            const profileDropdown = document.getElementById('profileDropdown');
+            // Function to handle dropdown toggles
+            function setupDropdown(triggerId, dropdownId) {
+                const trigger = document.getElementById(triggerId);
+                const dropdown = document.getElementById(dropdownId);
 
-            if (profileTrigger && profileDropdown) {
-                profileTrigger.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    profileDropdown.classList.toggle('active');
-                });
+                if (trigger && dropdown) {
+                    trigger.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        // Close other dropdowns first
+                        const allDropdowns = document.querySelectorAll('.profile-dropdown-menu');
+                        allDropdowns.forEach(d => {
+                            if (d !== dropdown) d.classList.remove('active');
+                        });
+                        dropdown.classList.toggle('active');
+                    });
 
-                // Close dropdown when clicking anywhere else
-                document.addEventListener('click', function (e) {
-                    if (!profileDropdown.contains(e.target) && !profileTrigger.contains(e.target)) {
-                        profileDropdown.classList.remove('active');
-                    }
-                });
+                    // Close dropdown when clicking anywhere else
+                    document.addEventListener('click', function (e) {
+                        if (!dropdown.contains(e.target) && !trigger.contains(e.target)) {
+                            dropdown.classList.remove('active');
+                        }
+                    });
+                }
             }
+
+            // Setup both authenticated and guest dropdowns
+            setupDropdown('profileTrigger', 'profileDropdown');
+            setupDropdown('guestTrigger', 'guestDropdown');
         });
 
         // ========================================
@@ -1302,15 +1459,15 @@
                     const loginCard = document.createElement('div');
                     loginCard.className = 'message bot';
                     loginCard.innerHTML = `
-                        <div class="message-avatar">🍰</div>
-                        <div class="message-content">
-                            <div class="suggested-actions">
-                                <button class="suggested-action" onclick="window.location.href='/login/'">
-                                    <i class="fas fa-sign-in-alt"></i> Login
-                                </button>
-                            </div>
-                        </div>
-                    `;
+    <div class="message-avatar">🍰</div>
+    <div class="message-content">
+        <div class="suggested-actions">
+            <button class="suggested-action" onclick="window.location.href='/login/'">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </div>
+    </div>
+    `;
                     chatMessages.appendChild(loginCard);
                 } else {
                     window.location.href = '/orders/';
@@ -1394,28 +1551,26 @@
 
             // If user has items in cart and types a short message (likely an item name), treat it as order intent
             const isShortItemName = chatbotCart.length > 0 && message.split(' ').length <= 3 && message.length < 30;
-
             if ((hasOrderIntent || isShortItemName) && !currentOrderSession) {
                 // Check if user is authenticated
                 if (!isAuthenticated) {
                     addMessage('bot', '🔒 Please login to place an order. You can create an account or login to continue.');
-
-                    // Add login/signup buttons
+                    // Add login / signup buttons
                     const loginCard = document.createElement('div');
                     loginCard.className = 'message bot';
                     loginCard.innerHTML = `
-                        <div class="message-avatar">🍰</div>
-                        <div class="message-content">
-                            <div class="suggested-actions">
-                                <button class="suggested-action" onclick="window.location.href='/login/'">
-                                    <i class="fas fa-sign-in-alt"></i> Login
-                                </button>
-                                <button class="suggested-action" onclick="window.location.href='/signin/'">
-                                    <i class="fas fa-user-plus"></i> Sign Up
-                                </button>
-                            </div>
-                        </div>
-                    `;
+        <div class="message-avatar">🍰</div>
+        <div class="message-content">
+            <div class="suggested-actions">
+                <button class="suggested-action" onclick="window.location.href='/login/'">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="suggested-action" onclick="window.location.href='/signin/'">
+                    <i class="fas fa-user-plus"></i> Sign Up
+                </button>
+            </div>
+        </div>
+        `;
                     chatMessages.appendChild(loginCard);
                     scrollToBottom();
                     sendBtn.disabled = false;
@@ -1483,22 +1638,22 @@
 
             if (type === 'bot') {
                 messageDiv.innerHTML = `
-                    <div class="message-avatar">🍰</div>
-                    <div class="message-content">
-                        <div class="message-bubble ${isError ? 'error-message' : ''}">
-                            ${content}
-                        </div>
-                        <div class="message-time">${time}</div>
-                    </div>
-                `;
+        <div class="message-avatar">🍰</div>
+        <div class="message-content">
+            <div class="message-bubble ${isError ? 'error-message' : ''}">
+                ${content}
+            </div>
+            <div class="message-time">${time}</div>
+        </div>
+        `;
             } else {
                 messageDiv.innerHTML = `
-                    <div class="message-content">
-                        <div class="message-bubble">${content}</div>
-                        <div class="message-time">${time}</div>
-                    </div>
-                    <div class="message-avatar">👤</div>
-                `;
+        <div class="message-content">
+            <div class="message-bubble">${content}</div>
+            <div class="message-time">${time}</div>
+        </div>
+        <div class="message-avatar">👤</div>
+        `;
             }
 
             chatMessages.appendChild(messageDiv);
@@ -1511,16 +1666,16 @@
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'suggested-actions';
             actionsDiv.innerHTML = `
-                <button class="suggested-action" onclick="window.location.href='/menu/'">
-                    <i class="fas fa-utensils"></i> View Menu
-                </button>
-                <button class="suggested-action" onclick="sendQuickMessage('Tell me more about cakes')">
-                    <i class="fas fa-info-circle"></i> Learn More
-                </button>
-                <button class="suggested-action" onclick="sendQuickMessage('What are your prices?')">
-                    <i class="fas fa-dollar-sign"></i> Check Prices
-                </button>
-            `;
+        <button class="suggested-action" onclick="window.location.href='/menu/'">
+            <i class="fas fa-utensils"></i> View Menu
+        </button>
+        <button class="suggested-action" onclick="sendQuickMessage('Tell me more about cakes')">
+            <i class="fas fa-info-circle"></i> Learn More
+        </button>
+        <button class="suggested-action" onclick="sendQuickMessage('What are your prices?')">
+            <i class="fas fa-dollar-sign"></i> Check Prices
+        </button>
+        `;
 
             const lastMessage = chatMessages.querySelector('.message.bot:last-child .message-content');
             if (lastMessage) {
@@ -1556,7 +1711,8 @@
                 const lowerMsg = message.toLowerCase().trim();
                 console.log('✅ Checking confirmation. User said:', lowerMsg);
 
-                if (lowerMsg === 'yes' || lowerMsg === 'y' || lowerMsg === 'yeah' || lowerMsg === 'yep' || lowerMsg === 'confirm') {
+                if (lowerMsg === 'yes' || lowerMsg === 'y' || lowerMsg === 'yeah' || lowerMsg === 'yep' || lowerMsg ===
+                    'confirm') {
                     // User confirmed - proceed with the pending order
                     const pending = pendingOrderConfirmation;
                     console.log('✅ Confirmed! Searching for:', pending.itemName, 'qty:', pending.quantity);
@@ -1572,7 +1728,8 @@
                 } else {
                     // Invalid response - ask again
                     console.log('⚠️ Invalid response for confirmation');
-                    addMessage('bot', `🤔 Do you mean **${pendingOrderConfirmation.quantity}x ${pendingOrderConfirmation.itemName}**?\n\nPlease reply "yes" to confirm or "no" to cancel.`);
+                    addMessage('bot', `🤔 Do you mean **${pendingOrderConfirmation.quantity}x
+        ${pendingOrderConfirmation.itemName}**?\n\nPlease reply "yes" to confirm or "no" to cancel.`);
                     return;
                 }
             }
@@ -1615,6 +1772,7 @@
             }
 
             // If not found, check quantity-first pattern
+            // If not found, check quantity-first pattern
             if (!foundQuantity && quantityFirstMatch) {
                 const parsedQty = parseInt(quantityFirstMatch[1]);
                 const extractedItem = quantityFirstMatch[2].trim();
@@ -1631,7 +1789,6 @@
             if (!foundQuantity && quantityLastMatch) {
                 const extractedItem = quantityLastMatch[1].trim();
                 const parsedQty = parseInt(quantityLastMatch[2]);
-
                 // Only accept if quantity is reasonable (1-100)
                 if (parsedQty >= 1 && parsedQty <= 100) {
                     quantity = parsedQty;
@@ -1648,7 +1805,6 @@
                     /(?:i want|i need|i'd like)\s+(?:to\s+)?(?:order|eat|have|buy|get|try)\s+(?:a\s+|an\s+|some\s+|the\s+)?(.+)/i,
                     /(?:want|need)\s+(?:to\s+)?(?:order|eat|have|buy|get|try)?\s*(?:a\s+|an\s+|some\s+|the\s+)?(.+)/i
                 ];
-
                 for (const pattern of genericPatterns) {
                     const match = message.match(pattern);
                     if (match && match[1]) {
@@ -1729,40 +1885,41 @@
                 const productCard = document.createElement('div');
                 productCard.className = 'message bot';
                 productCard.innerHTML = `
-                    <div class="message-avatar">🍰</div>
-                    <div class="message-content">
-                        <div class="product-card">
-                            ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : ''}
-                            <div class="product-info">
-                                <h4>${item.name}</h4>
-                                <p>${item.description || item.category}</p>
-                                <div class="product-price">₹${item.price.toFixed(2)} each</div>
-                                <div class="product-actions" style="flex-direction: column; gap: 10px;">
-                                    <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
-                                        <label style="font-weight: 600;">Quantity:</label>
-                                        <select id="qty-${item.id}" style="padding: 8px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px;">
-                                            <option value="1" ${suggestedQuantity === 1 ? 'selected' : ''}>1</option>
-                                            <option value="2" ${suggestedQuantity === 2 ? 'selected' : ''}>2</option>
-                                            <option value="3" ${suggestedQuantity === 3 ? 'selected' : ''}>3</option>
-                                            <option value="4" ${suggestedQuantity === 4 ? 'selected' : ''}>4</option>
-                                            <option value="5" ${suggestedQuantity === 5 ? 'selected' : ''}>5</option>
-                                            <option value="6" ${suggestedQuantity === 6 ? 'selected' : ''}>6</option>
-                                            <option value="7" ${suggestedQuantity === 7 ? 'selected' : ''}>7</option>
-                                            <option value="8" ${suggestedQuantity === 8 ? 'selected' : ''}>8</option>
-                                            <option value="9" ${suggestedQuantity === 9 ? 'selected' : ''}>9</option>
-                                            <option value="10" ${suggestedQuantity === 10 ? 'selected' : ''}>10</option>
-                                        </select>
-                                    </div>
-                                    <button class="btn-order" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">
-                                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                                    </button>
-                                    <button class="btn-view" onclick="window.location.href='/menu/'">
-                                        <i class="fas fa-eye"></i> View Full Menu
-                                    </button>
-                                </div>
+                <div class="message-avatar">🍰</div>
+                <div class="message-content">
+                    <div class="product-card">
+                        ${item.image_url ? `<img src="${item.image_url}" alt="${item.name}">` : ''}
+                        <div class="product-info">
+                            <h4>${item.name}</h4>
+                            <p>${item.description || item.category}</p>
+                            <div class="product-price">₹${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div class="product-actions">
+                            <div style="display: flex; align-items: center; gap: 10px; justify-content: center;">
+                                <label style="font-weight: 600;">Quantity:</label>
+                                <select id="qty-${item.id}"
+                                    style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 14px; min-width: 60px;">
+                                    <option value="1" ${suggestedQuantity === 1 ? 'selected' : ''}>1</option>
+                                    <option value="2" ${suggestedQuantity === 2 ? 'selected' : ''}>2</option>
+                                    <option value="3" ${suggestedQuantity === 3 ? 'selected' : ''}>3</option>
+                                    <option value="4" ${suggestedQuantity === 4 ? 'selected' : ''}>4</option>
+                                    <option value="5" ${suggestedQuantity === 5 ? 'selected' : ''}>5</option>
+                                    <option value="6" ${suggestedQuantity === 6 ? 'selected' : ''}>6</option>
+                                    <option value="7" ${suggestedQuantity === 7 ? 'selected' : ''}>7</option>
+                                    <option value="8" ${suggestedQuantity === 8 ? 'selected' : ''}>8</option>
+                                    <option value="9" ${suggestedQuantity === 9 ? 'selected' : ''}>9</option>
+                                    <option value="10" ${suggestedQuantity === 10 ? 'selected' : ''}>10</option>
+                                </select>
                             </div>
+                            <button class="btn-order" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                            <button class="btn-view" onclick="window.location.href='/menu/'">
+                                <i class="fas fa-eye"></i> View Full Menu
+                            </button>
                         </div>
                     </div>
+                </div>
                 `;
                 chatMessages.appendChild(productCard);
             });
@@ -1778,17 +1935,17 @@
                 const loginCard = document.createElement('div');
                 loginCard.className = 'message bot';
                 loginCard.innerHTML = `
-                    <div class="message-avatar">🍰</div>
-                    <div class="message-content">
-                        <div class="suggested-actions">
-                            <button class="suggested-action" onclick="window.location.href='/login/'">
-                                <i class="fas fa-sign-in-alt"></i> Login
-                            </button>
-                            <button class="suggested-action" onclick="window.location.href='/signin/'">
-                                <i class="fas fa-user-plus"></i> Sign Up
-                            </button>
-                        </div>
+                <div class="message-avatar">🍰</div>
+                <div class="message-content">
+                    <div class="suggested-actions">
+                        <button class="suggested-action" onclick="window.location.href='/login/'">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <button class="suggested-action" onclick="window.location.href='/signin/'">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </button>
                     </div>
+                </div>
                 `;
                 chatMessages.appendChild(loginCard);
                 scrollToBottom();
@@ -1840,7 +1997,7 @@
                         </button>
                     </div>
                 </div>
-            `;
+                `;
             chatMessages.appendChild(cartCard);
             scrollToBottom();
         }
@@ -1899,17 +2056,17 @@
                 const loginCard = document.createElement('div');
                 loginCard.className = 'message bot';
                 loginCard.innerHTML = `
-                    <div class="message-avatar">🍰</div>
-                    <div class="message-content">
-                        <div class="suggested-actions">
-                            <button class="suggested-action" onclick="window.location.href='/login/'">
-                                <i class="fas fa-sign-in-alt"></i> Login
-                            </button>
-                            <button class="suggested-action" onclick="window.location.href='/signin/'">
-                                <i class="fas fa-user-plus"></i> Sign Up
-                            </button>
-                        </div>
+                <div class="message-avatar">🍰</div>
+                <div class="message-content">
+                    <div class="suggested-actions">
+                        <button class="suggested-action" onclick="window.location.href='/login/'">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <button class="suggested-action" onclick="window.location.href='/signin/'">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </button>
                     </div>
+                </div>
                 `;
                 chatMessages.appendChild(loginCard);
                 scrollToBottom();
@@ -1941,7 +2098,10 @@
                     orderStep = 'address';
 
                     addMessage('bot', data.message);
-                    addMessage('bot', `📦 Order Summary:\n• Item: ${data.item.name}\n• Quantity: ${data.item.quantity}\n• Price: ₹${data.item.item_total.toFixed(2)}\n• Delivery Fee: ₹${data.item.delivery_fee.toFixed(2)}\n• Total: ₹${data.item.grand_total.toFixed(2)}\n\n📍 Please provide your delivery address and phone number.`);
+                    addMessage('bot', `📦 Order Summary:\n• Item: ${data.item.name}\n• Quantity: ${data.item.quantity}\n•
+                Price: ₹${data.item.item_total.toFixed(2)}\n• Delivery Fee: ₹${data.item.delivery_fee.toFixed(2)}\n•
+                Total: ₹${data.item.grand_total.toFixed(2)}\n\n📍 Please provide your delivery address and phone
+                number.`);
 
                     // Add address input form
                     addAddressForm();
@@ -1966,16 +2126,16 @@
                 <div class="message-avatar">🍰</div>
                 <div class="message-content">
                     <div class="product-card" style="flex-direction: column;">
-                        <input type="text" id="deliveryAddress" placeholder="Enter full delivery address" 
-                               style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #e0e0e0; border-radius: 8px;">
-                        <input type="tel" id="deliveryPhone" placeholder="Phone number" 
-                               style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <input type="text" id="deliveryAddress" placeholder="Enter full delivery address"
+                            style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #e0e0e0; border-radius: 8px;">
+                        <input type="tel" id="deliveryPhone" placeholder="Phone number"
+                            style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #e0e0e0; border-radius: 8px;">
                         <button class="btn-order" onclick="submitAddress()" style="width: 100%; margin-top: 10px;">
                             <i class="fas fa-check"></i> Confirm Address
                         </button>
                     </div>
                 </div>
-            `;
+                `;
             chatMessages.appendChild(formCard);
             scrollToBottom();
         }
@@ -2079,7 +2239,8 @@
                     let summaryText = '📦 **Order Summary:**\n\n';
                     chatbotCart.forEach((item, index) => {
                         const itemTotal = item.price * item.quantity;
-                        summaryText += `${index + 1}. ${item.name} - ${item.quantity}x ₹${item.price.toFixed(2)} = ₹${itemTotal.toFixed(2)}\n`;
+                        summaryText += `${index + 1}. ${item.name} - ${item.quantity}x ₹${item.price.toFixed(2)} =
+                ₹${itemTotal.toFixed(2)}\n`;
                     });
 
                     summaryText += `\n💰 Subtotal: ₹${itemsTotal.toFixed(2)}`;
@@ -2150,7 +2311,8 @@
                     addMessage('bot', data.message);
 
                     const summary = data.order_summary;
-                    const summaryText = `✅ Order Summary:\n\n📦 ${summary.item_name} (${summary.quantity}x)\n💰 Total: ₹${summary.grand_total.toFixed(2)}\n📍 ${summary.delivery_address}`;
+                    const summaryText = `✅ Order Summary:\n\n📦 ${summary.item_name} (${summary.quantity}x)\n💰 Total:
+                ₹${summary.grand_total.toFixed(2)}\n📍 ${summary.delivery_address}`;
 
                     addMessage('bot', summaryText);
                     addPaymentButton();
@@ -2177,13 +2339,14 @@
                     <div class="product-card">
                         <div style="text-align: center; width: 100%;">
                             <p style="margin-bottom: 15px;">Ready to complete your order?</p>
-                            <button class="btn-order" onclick="processPayment()" style="width: 100%; padding: 12px; font-size: 16px;">
+                            <button class="btn-order" onclick="processPayment()"
+                                style="width: 100%; padding: 12px; font-size: 16px;">
                                 <i class="fas fa-credit-card"></i> Pay with Razorpay
                             </button>
                         </div>
                     </div>
                 </div>
-            `;
+                `;
             chatMessages.appendChild(paymentCard);
             scrollToBottom();
         }
@@ -2291,7 +2454,9 @@
                 // Check if payment was successful
                 if (response.ok && data.success) {
                     addMessage('bot', data.message);
-                    addMessage('bot', `🎉 Order ID: ${data.order_id}\n⏱️ Estimated Delivery: ${data.estimated_delivery}\n\nThank you for ordering from The Bake Story! Your delicious treats are on the way! 🍰`);
+                    addMessage('bot', `🎉 Order ID: ${data.order_id}\n⏱️ Estimated Delivery:
+                ${data.estimated_delivery}\n\nThank you for ordering from The Bake Story! Your delicious treats are on
+                the way! 🍰`);
 
                     // Reset order flow
                     currentOrderSession = null;
@@ -2340,7 +2505,7 @@
                         </button>
                     </div>
                 </div>
-            `;
+                `;
             chatMessages.appendChild(trackCard);
             scrollToBottom();
         }

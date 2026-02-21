@@ -25,4 +25,8 @@ urlpatterns = [
     path('qr-landing/', views.qr_landing_view, name='qr_landing'),
     path('order-assistant/', views.chatbot_order_view, name='chatbot_order'),
     path('kitchen/', views.kitchen_portal_view, name='kitchen_portal'),
+    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    
+    # Admin API endpoints
+    path('api/admin/stats/', views.admin_stats_api, name='admin_stats'),
 ]

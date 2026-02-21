@@ -46,10 +46,21 @@ order_sessions = {}
 def get_chatbot():
     """Get or create chatbot instance"""
     global chatbot_instance
-    if chatbot_instance is None:
-        chatbot_instance = DatabaseRAGChatbot(GROQ_API_KEY)
-        chatbot_instance.initialize()
-    return chatbot_instance
+    try:
+        if chatbot_instance is None:
+            print("🤖 Creating new chatbot instance...")
+            chatbot_instance = DatabaseRAGChatbot(GROQ_API_KEY)
+            chatbot_instance.initialize()
+        elif chatbot_instance.vectorstore is None:
+            print("🤖 Chatbot instance exists but vectorstore is missing. Re-initializing...")
+            chatbot_instance.initialize()
+        return chatbot_instance
+    except Exception as e:
+        print(f"❌ Failed to initialize chatbot: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        chatbot_instance = None # Reset so we can try again next time
+        return None
 
 
 @api_view(['POST'])
@@ -72,6 +83,11 @@ def chatbot_query(request):
         
         # Get chatbot and ask question
         chatbot = get_chatbot()
+        if chatbot is None:
+            return Response(
+                {"error": "Chatbot initialization failed. Please check server logs.", "status": "error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         answer = chatbot.ask(query)
         
         return Response({
