@@ -85,7 +85,9 @@ class Order(models.Model):
         ('confirmed', 'Confirmed'),
         ('preparing', 'Preparing'),
         ('ready', 'Ready'),
-        ('served', 'Served'),
+        ('picked_up', 'Picked Up'),
+        ('on_the_way', 'On The Way'),
+        ('delivered', 'Delivered'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
@@ -112,11 +114,20 @@ class Order(models.Model):
     # Special instructions
     special_instructions = models.TextField(blank=True)
     
+    # Driver assignment
+    assigned_driver = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='driver_orders',
+        help_text='Driver assigned to deliver this order'
+    )
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     ready_at = models.DateTimeField(null=True, blank=True)
+    picked_up_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
@@ -199,9 +210,70 @@ class Payment(models.Model):
         self.save()
 
 
+class DriverLocation(models.Model):
+    """Real-time driver GPS location for live tracking"""
+    driver = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='driver_location'
+    )
+    latitude = models.FloatField(default=0.0)
+    longitude = models.FloatField(default=0.0)
+    heading = models.FloatField(default=0.0, help_text='Bearing in degrees')
+    speed = models.FloatField(default=0.0, help_text='Speed in km/h')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Location of {self.driver.username} ({self.latitude}, {self.longitude})"
+
+
+class SavedAddress(models.Model):
+    """Up to 2 saved delivery addresses per user (Swiggy-style)"""
+    ADDRESS_TYPE_CHOICES = [
+        ('home', 'Home'),
+        ('work', 'Work'),
+        ('other', 'Other'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_addresses')
+    label = models.CharField(max_length=20, choices=ADDRESS_TYPE_CHOICES, default='home')
+    house_flat = models.CharField(max_length=200, help_text='House/Flat/Floor/Building')
+    area_street = models.CharField(max_length=300, help_text='Area, Street, Sector, Village')
+    landmark = models.CharField(max_length=200, blank=True, help_text='Nearby landmark')
+    city = models.CharField(max_length=100, default='Hyderabad')
+    pincode = models.CharField(max_length=10, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    full_address = models.TextField(blank=True, help_text='Full formatted address string')
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_default', '-created_at']
+
+    def save(self, *args, **kwargs):
+        # Auto-build full_address if not set
+        parts = [self.house_flat, self.area_street]
+        if self.landmark:
+            parts.append(self.landmark)
+        parts.append(self.city)
+        if self.pincode:
+            parts.append(self.pincode)
+        self.full_address = ', '.join(p for p in parts if p)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.label.title()} - {self.user.username}: {self.full_address[:60]}"
+
+
 class UserProfile(models.Model):
     """Extended user profile information"""
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('driver', 'Driver'),
+        ('customer', 'Customer'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -211,8 +283,20 @@ class UserProfile(models.Model):
     # Preferences
     default_delivery_address = models.TextField(blank=True)
     
+    # Driver-specific fields
+    vehicle_number = models.CharField(max_length=30, blank=True, help_text='Vehicle registration number')
+    is_available = models.BooleanField(default=False, help_text='Is driver currently available for deliveries')
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_driver(self):
+        return self.role == 'driver'
+
     def __str__(self):
-        return f"Profile - {self.user.username}"
+        return f"Profile - {self.user.username} ({self.get_role_display()})"

@@ -1007,6 +1007,12 @@
                     <h1>The Bake Story</h1>
                 </a></aside>
             <aside id="nav2">
+                {% if user_role == 'admin' %}
+                <a href="{% url 'admin_dashboard' %}" style="color:#170f0ae2;font-weight:600;">Dashboard</a>
+                <a href="{% url 'kitchen_portal' %}" style="color:#170f0ae2;font-weight:600;">Kitchen Portal</a>
+                <a href="{% url 'menu_management' %}" style="color:#170f0ae2;font-weight:600;">Menu Management</a>
+                <!-- <a href="{% url 'payment_management' %}" style="color:#d2691e;font-weight:600;">Payments</a> -->
+                {% else %}
                 <a href="{% url 'index' %}">Home</a>
                 <a href="{% url 'menu' %}">Menu</a>
                 <a href="{% url 'about' %}">About</a>
@@ -1014,14 +1020,20 @@
                 {% if user.is_authenticated %}
                 <a href="{% url 'orders' %}">Orders</a>
                 {% endif %}
+                {% if user_role == 'driver' %}
+                <a href="{% url 'driver_dashboard' %}" style="color:#1565c0;font-weight:600;">Deliveries</a>
+                {% endif %}
+                {% endif %}
             </aside>
             <aside id="nav3">
 
+                {% if user_role != 'admin' %}
                 <a href="{% url 'cart' %}">
                     <i class="ri-shopping-cart-2-line"></i>
                     <div id="quantity" class="quantity">0</div>
                     <p id="cart_price">₹0.00</p>
                 </a>
+                {% endif %}
                 {% comment %} {% if user.is_authenticated %}
                 {% endif %} {% endcomment %}
             </aside>
@@ -1035,7 +1047,7 @@
                         </div>
                         <div class="trigger-info">
                             <h4>{{ user.first_name|default:user.username }}</h4>
-                            <span>{% if user.is_staff %}Admin{% else %}Customer{% endif %}</span>
+                            <span>{% if user_role == 'admin' %}Admin{% elif user_role == 'driver' %}Driver{% else %}Customer{% endif %}</span>
                         </div>
                         <i class="fas fa-chevron-down chevron"></i>
                     </div>
@@ -1049,17 +1061,46 @@
                             <div class="profile-info">
                                 <h3>{{ user.first_name|default:user.username }} {{ user.last_name|default:'' }}</h3>
                                 <p>{{ user.email }}</p>
-                                {% if user.is_staff or user.is_superuser %}
+                                {% if user_role == 'admin' %}
                                 <span class="admin-badge">Admin</span>
+                                {% elif user_role == 'driver' %}
+                                <span class="admin-badge"
+                                    style="background:linear-gradient(135deg,#1565c0,#1976d2);color:white;">Driver</span>
                                 {% endif %}
                             </div>
                         </div>
                         <hr>
                         <div class="profile-links">
+                            {% if user_role != 'admin' %}
                             <a href="{% url 'orders' %}"><i class="fas fa-shopping-bag"></i> My Orders</a>
                             <a href="{% url 'contact' %}"><i class="fas fa-phone-alt"></i> Contact Us</a>
                             <a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> About Us</a>
+                            {% endif %}
                         </div>
+                        {% if user_role == 'admin' %}
+                        <hr>
+                        <div class="profile-links">
+                            <a href="{% url 'admin_dashboard' %}" style="color:#d2691e;"><i
+                                    class="fas fa-tachometer-alt"></i> Admin Dashboard</a>
+                            <a href="{% url 'kitchen_portal' %}" style="color:#d2691e;"><i class="fas fa-utensils"></i>
+                                Kitchen Portal</a>
+                            <a href="{% url 'menu_management' %}" style="color:#d2691e;"><i
+                                    class="fas fa-book-open"></i> Menu Management</a>
+                            <a href="{% url 'payment_management' %}" style="color:#d2691e;"><i
+                                    class="fas fa-credit-card"></i> Payments</a>
+                            <a href="{% url 'user_management' %}" style="color:#d2691e;"><i class="fas fa-users"></i>
+                                User Management</a>
+                            <a href="{% url 'role_management' %}" style="color:#d2691e;"><i
+                                    class="fas fa-user-shield"></i> Role Management</a>
+                        </div>
+                        {% endif %}
+                        {% if user_role == 'driver' %}
+                        <hr>
+                        <div class="profile-links">
+                            <a href="{% url 'driver_dashboard' %}" style="color:#1565c0;"><i class="fas fa-truck"></i>
+                                My Deliveries</a>
+                        </div>
+                        {% endif %}
                         <hr>
                         <div class="profile-footer">
                             <a href="{% url 'logout' %}" class="sign-out-btn">

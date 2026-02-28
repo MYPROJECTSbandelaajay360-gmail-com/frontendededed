@@ -1,0 +1,219 @@
+{% extends 'bakery/base.html' %}
+{% load static %}
+
+{% block title %}Payment Management - TheBakeStory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-page {
+        padding: 100px 20px 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background: #faf6f1;
+    }
+
+    .admin-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .admin-page-header h1 {
+        font-family: 'Pacifico', cursive;
+        color: #d2691e;
+        font-size: 2rem;
+        margin: 0;
+    }
+
+    .admin-page-header .subtitle {
+        color: #888;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 8px 18px;
+        border: 2px solid #f1f2f6;
+        border-radius: 20px;
+        background: white;
+        color: #636e72;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+        color: white;
+        border-color: #d2691e;
+    }
+
+    .admin-table-wrap {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-table th {
+        background: linear-gradient(135deg, #d2691e 0%, #cd853f 100%);
+        color: white;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f2f6;
+        font-size: 0.93rem;
+        color: #2d3436;
+    }
+
+    .admin-table tr:hover td {
+        background: #fffaf5;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .badge-pending {
+        background: #fff3e0;
+        color: #e65100;
+    }
+
+    .badge-failed {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .badge-refunded {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .amount {
+        font-weight: 700;
+        color: #2e7d32;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #d2691e;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+
+        .admin-table th:nth-child(5),
+        .admin-table td:nth-child(5) {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-page-header">
+        <div>
+            <h1>💳 Payment Management</h1>
+            <p class="subtitle">Track and manage all payment transactions</p>
+        </div>
+    </div>
+
+    <div class="filter-bar" style="margin-bottom:20px;">
+        <a href="{% url 'payment_management' %}" class="filter-btn {% if not status_filter %}active{% endif %}">All</a>
+        <a href="{% url 'payment_management' %}?status=completed"
+            class="filter-btn {% if status_filter == 'completed' %}active{% endif %}">Completed</a>
+        <a href="{% url 'payment_management' %}?status=pending"
+            class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+        <a href="{% url 'payment_management' %}?status=failed"
+            class="filter-btn {% if status_filter == 'failed' %}active{% endif %}">Failed</a>
+    </div>
+
+    <div class="admin-table-wrap">
+        {% if payments %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td><code>{{ p.transaction_id|default:p.id }}</code></td>
+                    <td>#{{ p.order.id }}</td>
+                    <td>{{ p.order.user.first_name|default:p.order.user.username }} {{ p.order.user.last_name|default:''
+                        }}</td>
+                    <td class="amount">₹{{ p.amount }}</td>
+                    <td>{{ p.get_payment_method_display }}</td>
+                    <td>
+                        {% if p.payment_status == 'completed' %}
+                        <span class="badge badge-completed">Completed</span>
+                        {% elif p.payment_status == 'pending' %}
+                        <span class="badge badge-pending">Pending</span>
+                        {% elif p.payment_status == 'failed' %}
+                        <span class="badge badge-failed">Failed</span>
+                        {% else %}
+                        <span class="badge badge-refunded">{{ p.get_payment_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.created_at|date:"M d, Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-credit-card"></i>
+            <p>No payments found{% if status_filter %} with status "{{ status_filter }}"{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

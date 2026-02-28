@@ -1,0 +1,529 @@
+{% extends 'bakery/base.html' %}
+{% load static %}
+
+{% block title %}User Management - TheBakeStory{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ═══════════════════════════════════════════════════════════
+       USER MANAGEMENT — Admin Panel Redesign
+       ═══════════════════════════════════════════════════════════ */
+    .admin-page {
+        padding: 70px 24px 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .page-header h1 i { color: #e8590c; }
+    .page-subtitle {
+        color: #64748b;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Search Input */
+    .search-form {
+        display: flex;
+        gap: 8px;
+    }
+    .search-input {
+        padding: 10px 16px 10px 40px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        min-width: 260px;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2394a3b8' viewBox='0 0 24 24' width='18' height='18'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E") no-repeat 12px center;
+        transition: all 0.2s;
+    }
+    .search-input:focus {
+        outline: none;
+        border-color: #e8590c;
+        box-shadow: 0 0 0 3px rgba(232,89,12,0.1);
+    }
+    .btn-search {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #e8590c, #c2410c);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-search:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(232,89,12,0.3);
+    }
+
+    /* Invite Driver Button */
+    .btn-invite {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #059669, #047857);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-invite:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+    }
+
+    /* Stat Cards */
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+    }
+    .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .stat-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .stat-card-icon.total { background: #fff7ed; color: #e8590c; }
+    .stat-card-icon.admins { background: #fef2f2; color: #dc2626; }
+    .stat-card-icon.drivers { background: #eff6ff; color: #2563eb; }
+    .stat-card-icon.customers { background: #dcfce7; color: #16a34a; }
+    .stat-card .count {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+    }
+    .stat-card .label {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    /* Table */
+    .table-wrapper {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+    }
+    .table-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fafafa;
+    }
+    .table-header h3 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .users-table th {
+        background: linear-gradient(135deg, #1e293b, #334155);
+        color: #fff;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .users-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 14px;
+        color: #334155;
+    }
+    .users-table tr:hover td {
+        background: #fef7f0;
+    }
+
+    /* User Cell */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .user-info h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .user-info p {
+        margin: 0;
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    /* Badge */
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .role-badge.admin {
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        color: #dc2626;
+    }
+    .role-badge.driver {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        color: #2563eb;
+    }
+    .role-badge.customer {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #16a34a;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-dot.active { background: #16a34a; }
+    .status-dot.inactive { background: #94a3b8; }
+
+    /* Invite Driver Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal-box h2 {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .modal-box h2 i { color: #e8590c; }
+    .modal-box .subtitle {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+    .form-group {
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 6px;
+    }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: #e8590c;
+        box-shadow: 0 0 0 3px rgba(232,89,12,0.1);
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+    .btn-cancel {
+        padding: 10px 20px;
+        background: #f1f5f9;
+        color: #64748b;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-submit {
+        padding: 10px 24px;
+        background: linear-gradient(135deg, #e8590c, #c2410c);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(232,89,12,0.3);
+    }
+
+    @media (max-width: 768px) {
+        .admin-page { padding: 60px 12px 12px; }
+        .users-table th:nth-child(4), .users-table td:nth-child(4) { display: none; }
+        .search-input { min-width: 180px; }
+        .form-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-users-cog"></i> User Management</h1>
+            <p class="page-subtitle">Manage all registered users, invite new drivers and admins</p>
+        </div>
+        <div class="header-actions">
+            <form method="get" class="search-form">
+                <input type="text" name="search" class="search-input" placeholder="Search users..." value="{{ search }}">
+                <button type="submit" class="btn-search"><i class="fas fa-search"></i> Search</button>
+            </form>
+            <button onclick="document.getElementById('inviteModal').classList.add('show')" class="btn-invite">
+                <i class="fas fa-user-plus"></i> Invite Driver
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-card-icon total"><i class="fas fa-users"></i></div>
+            <div>
+                <div class="count">{{ users|length }}</div>
+                <div class="label">Total Users</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon admins"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <div class="count">{{ admin_count }}</div>
+                <div class="label">Admins</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon drivers"><i class="fas fa-motorcycle"></i></div>
+            <div>
+                <div class="count">{{ driver_count }}</div>
+                <div class="label">Drivers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-icon customers"><i class="fas fa-shopping-bag"></i></div>
+            <div>
+                <div class="count">{{ customer_count }}</div>
+                <div class="label">Customers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-wrapper">
+        <div class="table-header">
+            <h3><i class="fas fa-list" style="color:#e8590c;margin-right:8px;"></i> All Users</h3>
+            <span style="font-size:13px;color:#64748b;">{{ users|length }} users</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <img src="https://ui-avatars.com/api/?name={{ u.first_name|default:u.username }}+{{ u.last_name|default:'' }}&background=e8590c&color=fff&bold=true&size=40&rounded=true"
+                                    alt="Avatar" class="user-avatar">
+                                <div class="user-info">
+                                    <h4>{{ u.first_name|default:u.username }} {{ u.last_name|default:"" }}</h4>
+                                    <p>@{{ u.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ u.email|default:"—" }}</td>
+                        <td>
+                            {% if u.profile.role == 'admin' %}
+                            <span class="role-badge admin"><i class="fas fa-shield-alt"></i> Admin</span>
+                            {% elif u.profile.role == 'driver' %}
+                            <span class="role-badge driver"><i class="fas fa-motorcycle"></i> Driver</span>
+                            {% else %}
+                            <span class="role-badge customer"><i class="fas fa-user"></i> Customer</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            {% if u.is_active %}
+                            <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#16a34a;font-weight:500;">
+                                <span class="status-dot active"></span> Active
+                            </span>
+                            {% else %}
+                            <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#94a3b8;font-weight:500;">
+                                <span class="status-dot inactive"></span> Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:40px;color:#64748b;">
+                            <i class="fas fa-users" style="font-size:32px;margin-bottom:8px;display:block;color:#e2e8f0;"></i>
+                            No users found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Invite Driver Modal -->
+<div class="modal-overlay" id="inviteModal">
+    <div class="modal-box">
+        <h2><i class="fas fa-user-plus"></i> Invite New Driver</h2>
+        <p class="subtitle">Create a driver account and send login credentials via email</p>
+        <form method="post" action="{% url 'user_management' %}" id="inviteForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="invite_driver">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" name="first_name" required placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" placeholder="Doe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" name="email" required placeholder="driver@example.com">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+                <label>Vehicle Number</label>
+                <input type="text" name="vehicle_number" placeholder="TS 09 AB 1234">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select name="role">
+                    <option value="driver" selected>Driver</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('inviteModal').classList.remove('show')">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Send Invite</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Close modal on overlay click
+    document.getElementById('inviteModal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+    });
+</script>
+{% endblock %}

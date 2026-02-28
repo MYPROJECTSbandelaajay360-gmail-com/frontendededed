@@ -1,0 +1,658 @@
+{% extends 'bakery/driver_base.html' %}
+
+{% block title %}Delivery Map - Driver Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ═══════════════════════════════════════════════════════════
+       DRIVER DELIVERY MAP — Swiggy/Zomato Navigation Style
+       ═══════════════════════════════════════════════════════════ */
+    .map-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 0;
+        height: calc(100vh - var(--header-height));
+        margin: -28px;
+    }
+
+    /* ── Map Container ── */
+    .map-area { position: relative; width: 100%; height: 100%; }
+    #driverMap { width: 100%; height: 100%; background: #e2e8f0; }
+
+    /* Live Pill */
+    .live-pill {
+        position: absolute; top: 14px; left: 14px; z-index: 10;
+        background: #111; color: #4caf50; font-size: 11px; font-weight: 800;
+        padding: 6px 16px; border-radius: 20px;
+        display: flex; align-items: center; gap: 6px; letter-spacing: .5px;
+    }
+    .live-dot-anim { width: 8px; height: 8px; background: #4caf50; border-radius: 50%; animation: blink 1.2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* Map Controls */
+    .map-controls {
+        position: absolute; top: 14px; right: 14px; z-index: 10;
+        display: flex; flex-direction: column; gap: 6px;
+    }
+    .map-btn {
+        width: 40px; height: 40px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 16px; color: #334155; transition: all .2s;
+    }
+    .map-btn:hover { color: #e8590c; border-color: #e8590c; }
+
+    /* ETA Bar at bottom of map */
+    .eta-bar {
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;
+        background: #fff; border-radius: 14px; padding: 14px 24px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 20px;
+        border: 1px solid #e2e8f0; min-width: 400px; max-width: 580px;
+    }
+    .eta-segment { display: flex; align-items: center; gap: 8px; }
+    .eta-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .eta-icon.pickup { background: #fff7ed; color: #e8590c; }
+    .eta-icon.dropoff { background: #dcfce7; color: #16a34a; }
+    .eta-label { font-size: 11px; color: #94a3b8; font-weight: 500; }
+    .eta-value { font-size: 16px; font-weight: 800; color: #1e293b; line-height: 1.1; }
+    .eta-dist { font-size: 12px; color: #64748b; font-weight: 500; }
+    .eta-divider { width: 1px; height: 36px; background: #e2e8f0; flex-shrink: 0; }
+    .eta-total { text-align: center; }
+    .eta-total .eta-value { color: #e8590c; }
+
+    /* ── Right Sidebar ── */
+    .map-sidebar {
+        background: #fff; border-left: 1px solid #e2e8f0;
+        overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    .sidebar-header {
+        padding: 18px 20px; border-bottom: 1px solid #e2e8f0;
+        font-weight: 700; font-size: 15px; color: #1e293b;
+        display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .sidebar-header i { color: #e8590c; }
+
+    /* GPS Bar */
+    .gps-bar {
+        padding: 12px 20px; border-bottom: 1px solid #e2e8f0; background: #f0fdf4;
+        font-size: 12px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .gps-dot { width: 10px; height: 10px; border-radius: 50%; background: #16a34a; animation: blink 2s infinite; flex-shrink: 0; }
+    .gps-bar.error { background: #fef2f2; }
+    .gps-bar.error .gps-dot { background: #dc2626; animation: none; }
+
+    /* Route Summary Card */
+    .route-summary {
+        padding: 16px 20px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;
+    }
+    .route-summary h4 { font-size: 13px; font-weight: 700; color: #1e293b; margin: 0 0 12px; }
+    .route-stops { position: relative; padding-left: 24px; }
+    .route-stops::before {
+        content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+        width: 2px; background: repeating-linear-gradient(to bottom, #e8590c 0, #e8590c 4px, transparent 4px, transparent 8px);
+    }
+    .route-stop { position: relative; padding: 6px 0; }
+    .route-stop-dot {
+        position: absolute; left: -20px; top: 10px; width: 16px; height: 16px;
+        border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .route-stop-dot.driver { background: #2563eb; }
+    .route-stop-dot.bakery { background: #e8590c; }
+    .route-stop-dot.customer { background: #16a34a; }
+    .route-stop-label { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .route-stop-name { font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 1px; }
+    .route-stop-eta { font-size: 11px; color: #64748b; margin-top: 1px; }
+
+    /* Delivery Card */
+    .delivery-card {
+        padding: 16px 20px; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: all .2s;
+    }
+    .delivery-card:hover { background: #fef7f0; }
+    .delivery-card.active { background: #fff7ed; border-left: 3px solid #e8590c; }
+    .dc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .dc-order { font-weight: 700; font-size: 14px; color: #1e293b; }
+    .dc-amount { font-weight: 800; color: #e8590c; font-size: 15px; }
+    .dc-status {
+        display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+        border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 6px;
+    }
+    .dc-status.confirmed, .dc-status.preparing, .dc-status.ready { background: #fff7ed; color: #e8590c; }
+    .dc-status.picked_up { background: #eff6ff; color: #2563eb; }
+    .dc-status.on_the_way { background: #dcfce7; color: #16a34a; }
+    .dc-customer { font-size: 13px; color: #334155; margin-bottom: 4px; }
+    .dc-address { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; }
+    .dc-address i { margin-top: 2px; color: #e8590c; flex-shrink: 0; }
+    .dc-items { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+    .dc-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .dc-btn {
+        padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+        border: none; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .2s;
+    }
+    .dc-btn.primary { background: linear-gradient(135deg, #e8590c, #c2410c); color: #fff; }
+    .dc-btn.primary:hover { box-shadow: 0 4px 12px rgba(232,89,12,0.3); transform: translateY(-1px); }
+    .dc-btn.outline { background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; }
+    .dc-btn.outline:hover { border-color: #e8590c; color: #e8590c; }
+    .dc-btn.call { background: #dcfce7; color: #16a34a; }
+
+    /* Empty State */
+    .empty-map {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        height: 100%; padding: 40px; text-align: center; color: #94a3b8;
+    }
+    .empty-map i { font-size: 48px; color: #e2e8f0; margin-bottom: 12px; }
+    .empty-map h3 { color: #64748b; font-size: 16px; margin-bottom: 4px; }
+    .empty-map p { font-size: 13px; }
+
+    @media (max-width: 900px) {
+        .map-wrapper { grid-template-columns: 1fr; grid-template-rows: 1fr 280px; }
+        .map-sidebar { border-left: none; border-top: 1px solid #e2e8f0; }
+        .eta-bar { min-width: auto; padding: 10px 16px; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="map-wrapper">
+    <!-- MAP AREA -->
+    <div class="map-area">
+        <div id="driverMap"></div>
+
+        <div class="live-pill">
+            <div class="live-dot-anim"></div> LIVE
+        </div>
+
+        <div class="map-controls">
+            <button class="map-btn" onclick="centerOnDriver()" title="Center on me"><i class="fas fa-crosshairs"></i></button>
+            <button class="map-btn" onclick="fitAllMarkers()" title="Fit all"><i class="fas fa-expand"></i></button>
+            <button class="map-btn" onclick="toggleTraffic()" title="Toggle traffic"><i class="fas fa-traffic-light"></i></button>
+        </div>
+
+        <!-- ETA Bar -->
+        <div class="eta-bar" id="etaBar" style="display:none;">
+            <div class="eta-segment">
+                <div class="eta-icon pickup"><i class="fas fa-store"></i></div>
+                <div>
+                    <div class="eta-label">To Pickup</div>
+                    <div class="eta-value" id="etaPickupTime">--</div>
+                    <div class="eta-dist" id="etaPickupDist">--</div>
+                </div>
+            </div>
+            <div class="eta-divider"></div>
+            <div class="eta-segment">
+                <div class="eta-icon dropoff"><i class="fas fa-home"></i></div>
+                <div>
+                    <div class="eta-label">To Drop-off</div>
+                    <div class="eta-value" id="etaDropoffTime">--</div>
+                    <div class="eta-dist" id="etaDropoffDist">--</div>
+                </div>
+            </div>
+            <div class="eta-divider"></div>
+            <div class="eta-segment">
+                <div class="eta-total">
+                    <div class="eta-label">Total Trip</div>
+                    <div class="eta-value" id="etaTotalTime">--</div>
+                    <div class="eta-dist" id="etaTotalDist">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="map-sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-route"></i> Active Deliveries ({{ active_orders|length }})
+        </div>
+
+        <div class="gps-bar" id="gpsBar">
+            <div class="gps-dot"></div>
+            <span id="gpsText">Acquiring GPS...</span>
+        </div>
+
+        <!-- Route Summary -->
+        <div class="route-summary" id="routeSummary" style="display:none;">
+            <h4><i class="fas fa-map-signs" style="color:#e8590c;margin-right:6px;"></i> Route Plan</h4>
+            <div class="route-stops">
+                <div class="route-stop">
+                    <div class="route-stop-dot driver"></div>
+                    <div class="route-stop-label">Your Location</div>
+                    <div class="route-stop-name" id="routeDriverLoc">Locating...</div>
+                    <div class="route-stop-eta" id="routeDriverEta"></div>
+                </div>
+                <div class="route-stop">
+                    <div class="route-stop-dot bakery"></div>
+                    <div class="route-stop-label">Pickup — The Bake Story</div>
+                    <div class="route-stop-name">{{ BAKERY_ADDRESS }}</div>
+                    <div class="route-stop-eta" id="routePickupEta"></div>
+                </div>
+                <div class="route-stop">
+                    <div class="route-stop-dot customer"></div>
+                    <div class="route-stop-label">Drop-off</div>
+                    <div class="route-stop-name" id="routeDropAddr">—</div>
+                    <div class="route-stop-eta" id="routeDropEta"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Cards -->
+        {% for order in active_orders %}
+        <div class="delivery-card {% if forloop.first %}active{% endif %}" id="dcard-{{ order.order_id }}"
+             onclick="selectDelivery('{{ order.order_id }}')">
+            <div class="dc-top">
+                <span class="dc-order">Order #{{ order.id }}</span>
+                <span class="dc-amount">₹{{ order.grand_total }}</span>
+            </div>
+            <span class="dc-status {{ order.status }}">
+                {% if order.status == 'on_the_way' %}<i class="fas fa-motorcycle"></i>
+                {% elif order.status == 'picked_up' %}<i class="fas fa-box"></i>
+                {% else %}<i class="fas fa-clock"></i>{% endif %}
+                {{ order.get_status_display }}
+            </span>
+            <div class="dc-customer"><i class="fas fa-user" style="color:#e8590c;margin-right:4px;"></i>
+                {{ order.user.get_full_name|default:order.customer_name|default:"Guest" }}
+                {% if order.delivery_phone %} &middot; {{ order.delivery_phone }}{% endif %}
+            </div>
+            <div class="dc-address">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ order.delivery_address|default:"No address" }}</span>
+            </div>
+            <div class="dc-items">
+                {% for item in order.items.all %}{{ item.quantity }}x {{ item.menu_item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </div>
+            <div class="dc-actions">
+                {% if order.status == 'confirmed' or order.status == 'preparing' or order.status == 'ready' %}
+                <button class="dc-btn primary" onclick="event.stopPropagation();updateOrderStatus('{{ order.order_id }}','pickup')">
+                    <i class="fas fa-hand-holding"></i> Mark Picked Up
+                </button>
+                {% elif order.status == 'picked_up' %}
+                <button class="dc-btn primary" onclick="event.stopPropagation();updateOrderStatus('{{ order.order_id }}','on_the_way')">
+                    <i class="fas fa-motorcycle"></i> Start Delivery
+                </button>
+                {% elif order.status == 'on_the_way' %}
+                <button class="dc-btn primary" onclick="event.stopPropagation();updateOrderStatus('{{ order.order_id }}','delivered')">
+                    <i class="fas fa-check-circle"></i> Mark Delivered
+                </button>
+                {% endif %}
+                {% if order.delivery_phone %}
+                <a href="tel:{{ order.delivery_phone }}" class="dc-btn call" onclick="event.stopPropagation()">
+                    <i class="fas fa-phone"></i> Call
+                </a>
+                {% endif %}
+                <button class="dc-btn outline" onclick="event.stopPropagation();openInGoogleMaps('{{ order.delivery_address|escapejs }}')">
+                    <i class="fas fa-directions"></i> Navigate
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-map">
+            <i class="fas fa-route"></i>
+            <h3>No Active Deliveries</h3>
+            <p>Accept delivery orders from your dashboard to see them here.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DRIVER DELIVERY MAP — Full Navigation System
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Constants ── */
+const BAKERY_LAT = {{ BAKERY_LAT }};
+const BAKERY_LNG = {{ BAKERY_LNG }};
+const BAKERY_POS = { lat: BAKERY_LAT, lng: BAKERY_LNG };
+const DELIVERIES = {{ deliveries_json|safe }};
+const INITIAL_DRIVER_LOC = {{ driver_location_json|safe }};
+const CSRF = '{{ csrf_token }}';
+
+/* ── State ── */
+let map, driverMarker, bakeryMarker;
+let driverPos = INITIAL_DRIVER_LOC || { lat: BAKERY_LAT, lng: BAKERY_LNG };
+let watchId = null;
+let selectedOrderId = DELIVERIES.length > 0 ? DELIVERIES[0].order_id : null;
+let destinationMarkers = {};
+let directionsRendererPickup = null;
+let directionsRendererDropoff = null;
+let trafficLayer = null;
+let trafficVisible = false;
+let geocodedAddresses = {};
+let lastRouteRedraw = 0;
+
+/* ── Scooter SVG (animated driver icon) ── */
+function getDriverSVG(bearing) {
+    const svg = `<svg width="56" height="56" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="ds" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,0.5)"/>
+        </filter>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#e8590c"/>
+          <stop offset="100%" stop-color="#9a3412"/>
+        </linearGradient>
+      </defs>
+      <g transform="rotate(${bearing} 34 34)" filter="url(#ds)">
+        <rect x="24" y="44" width="20" height="15" rx="2" fill="url(#grad)" stroke="#7c2d12" stroke-width="1"/>
+        <rect x="29" y="47" width="10" height="9" fill="white" rx="1" opacity="0.9"/>
+        <path d="M31 49 L34 52 L37 49" stroke="#e8590c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M28 22 L40 22 L42 46 L26 46 Z" fill="#333"/>
+        <path d="M26 14 Q34 10 42 14 L40 24 L28 24 Z" fill="url(#grad)" stroke="#7c2d12" stroke-width="0.5"/>
+        <rect x="31" y="12" width="6" height="4" rx="1" fill="#FEF3C7"/>
+        <line x1="18" y1="18" x2="26" y2="20" stroke="#333" stroke-width="1.5"/>
+        <circle cx="18" cy="18" r="2" fill="#111" stroke="#555" stroke-width="0.5"/>
+        <line x1="50" y1="18" x2="42" y2="20" stroke="#333" stroke-width="1.5"/>
+        <circle cx="50" cy="18" r="2" fill="#111" stroke="#555" stroke-width="0.5"/>
+        <path d="M18 20 L50 20" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="18" cy="20" r="2.5" fill="#000"/>
+        <circle cx="50" cy="20" r="2.5" fill="#000"/>
+        <ellipse cx="34" cy="34" rx="10" ry="9" fill="#202124"/>
+        <circle cx="34" cy="34" r="7" fill="#e8590c" stroke="#7c2d12" stroke-width="1"/>
+        <rect x="30" y="30" width="8" height="3" rx="1.5" fill="#111" opacity="0.8"/>
+        <path d="M26 34 Q22 30 20 20" stroke="#202124" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <path d="M42 34 Q46 30 48 20" stroke="#202124" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </g>
+    </svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+/* ── Bearing ── */
+function calcBearing(from, to) {
+    const lat1 = from.lat * Math.PI / 180, lng1 = from.lng * Math.PI / 180;
+    const lat2 = to.lat * Math.PI / 180, lng2 = to.lng * Math.PI / 180;
+    const dLng = lng2 - lng1;
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+}
+
+/* ── Smooth marker animation (LERP) ── */
+let animFrame = null;
+function animateMarkerTo(marker, newPos, dur) {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    const start = { lat: marker.getPosition().lat(), lng: marker.getPosition().lng() };
+    const t0 = Date.now();
+    const bearing = calcBearing(start, newPos);
+    marker.setIcon({ url: getDriverSVG(bearing), scaledSize: new google.maps.Size(56, 56), anchor: new google.maps.Point(28, 28) });
+    function step() {
+        const t = Math.min((Date.now() - t0) / dur, 1);
+        const ease = t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+        marker.setPosition({ lat: start.lat + (newPos.lat - start.lat)*ease, lng: start.lng + (newPos.lng - start.lng)*ease });
+        if (t < 1) animFrame = requestAnimationFrame(step);
+    }
+    animFrame = requestAnimationFrame(step);
+}
+
+/* ══════════════════════════════════════
+   INIT MAP
+   ══════════════════════════════════════ */
+function initMap() {
+    map = new google.maps.Map(document.getElementById('driverMap'), {
+        center: driverPos,
+        zoom: 14,
+        disableDefaultUI: true,
+        zoomControl: true,
+        fullscreenControl: true,
+        styles: [
+            { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+        ]
+    });
+
+    trafficLayer = new google.maps.TrafficLayer();
+
+    /* Directions renderers — 2 legs */
+    directionsRendererPickup = new google.maps.DirectionsRenderer({
+        map: map, suppressMarkers: true,
+        polylineOptions: { strokeColor: '#2563eb', strokeWeight: 8, strokeOpacity: 1.0, zIndex: 1 }
+    });
+    directionsRendererDropoff = new google.maps.DirectionsRenderer({
+        map: map, suppressMarkers: true,
+        polylineOptions: { strokeColor: '#e8590c', strokeWeight: 8, strokeOpacity: 1.0, zIndex: 2 }
+    });
+
+    /* Bakery marker */
+    bakeryMarker = new google.maps.Marker({
+        position: BAKERY_POS, map: map, title: 'The Bake Story (Pickup)',
+        icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+                '<circle cx="22" cy="22" r="19" fill="#e8590c" stroke="white" stroke-width="3"/>' +
+                '<text x="22" y="28" text-anchor="middle" fill="white" font-size="18" font-weight="bold">P</text></svg>'
+            ),
+            scaledSize: new google.maps.Size(44, 44), anchor: new google.maps.Point(22, 22)
+        },
+        zIndex: 5
+    });
+    new google.maps.InfoWindow({
+        content: '<div style="font-family:Inter,sans-serif;padding:4px;"><strong>The Bake Story</strong><br><span style="color:#64748b;">Pickup Point</span></div>'
+    }).open(map, bakeryMarker);
+
+    /* Driver marker */
+    driverMarker = new google.maps.Marker({
+        position: driverPos, map: map, title: 'You',
+        icon: { url: getDriverSVG(0), scaledSize: new google.maps.Size(56, 56), anchor: new google.maps.Point(28, 28) },
+        zIndex: 10
+    });
+
+    /* Geocode all delivery destinations */
+    DELIVERIES.forEach(d => geocodeAddress(d.address, d.order_id));
+
+    /* Start live GPS */
+    startGPSTracking();
+
+    /* Auto-select first delivery after geocoding */
+    if (selectedOrderId) setTimeout(() => selectDelivery(selectedOrderId), 1500);
+}
+
+/* ── Geocode delivery address ── */
+function geocodeAddress(address, orderId) {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: address + ', Hyderabad, India' }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+            const pos = results[0].geometry.location;
+            const latLng = { lat: pos.lat(), lng: pos.lng() };
+            geocodedAddresses[orderId] = latLng;
+
+            const marker = new google.maps.Marker({
+                position: latLng, map: map,
+                title: 'Drop-off: ' + address,
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+                        '<circle cx="22" cy="22" r="19" fill="#16a34a" stroke="white" stroke-width="3"/>' +
+                        '<text x="22" y="28" text-anchor="middle" fill="white" font-size="18" font-weight="bold">D</text></svg>'
+                    ),
+                    scaledSize: new google.maps.Size(44, 44), anchor: new google.maps.Point(22, 22)
+                },
+                zIndex: 4
+            });
+
+            const info = new google.maps.InfoWindow({
+                content: `<div style="font-family:Inter,sans-serif;padding:4px;"><strong>Drop-off</strong><br><span style="color:#64748b;">${address}</span></div>`
+            });
+            marker.addListener('click', () => info.open(map, marker));
+            destinationMarkers[orderId] = marker;
+
+            if (orderId === selectedOrderId) drawRoutes(orderId);
+        }
+    });
+}
+
+/* ── Draw 2-leg route: driver → bakery → customer ── */
+function drawRoutes(orderId) {
+    const dropoff = geocodedAddresses[orderId];
+    if (!dropoff) return;
+
+    const delivery = DELIVERIES.find(d => d.order_id === orderId);
+    const isPickedUp = delivery && (delivery.status === 'picked_up' || delivery.status === 'on_the_way');
+
+    document.getElementById('etaBar').style.display = 'flex';
+    document.getElementById('routeSummary').style.display = 'block';
+    document.getElementById('routeDropAddr').textContent = delivery ? delivery.address : '—';
+
+    const svc = new google.maps.DirectionsService();
+
+    if (isPickedUp) {
+        /* Already picked up → single route: driver → customer */
+        directionsRendererPickup.setDirections({ routes: [] });
+        svc.route({ origin: driverPos, destination: dropoff, travelMode: 'DRIVING' }, (result, status) => {
+            if (status === 'OK') {
+                directionsRendererDropoff.setDirections(result);
+                const leg = result.routes[0].legs[0];
+                document.getElementById('etaPickupTime').textContent = '✓ Done';
+                document.getElementById('etaPickupDist').textContent = 'Picked up';
+                document.getElementById('etaDropoffTime').textContent = Math.round(leg.duration.value / 60) + ' min';
+                document.getElementById('etaDropoffDist').textContent = leg.distance.text;
+                document.getElementById('etaTotalTime').textContent = Math.round(leg.duration.value / 60) + ' min';
+                document.getElementById('etaTotalDist').textContent = leg.distance.text;
+                document.getElementById('routePickupEta').textContent = '✓ Already picked up';
+                document.getElementById('routeDropEta').textContent = leg.duration.text + ' • ' + leg.distance.text;
+
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend(driverPos); bounds.extend(dropoff);
+                setTimeout(() => map.fitBounds(bounds, { top: 80, right: 40, bottom: 100, left: 40 }), 300);
+            } else {
+                console.error('Directions API error (pickup leg):', status);
+            }
+        });
+    } else {
+        /* Leg 1: driver → bakery */
+        svc.route({ origin: driverPos, destination: BAKERY_POS, travelMode: 'DRIVING' }, (result, status) => {
+            if (status === 'OK') {
+                directionsRendererPickup.setDirections(result);
+                const leg1 = result.routes[0].legs[0];
+                document.getElementById('etaPickupTime').textContent = Math.round(leg1.duration.value / 60) + ' min';
+                document.getElementById('etaPickupDist').textContent = leg1.distance.text;
+                document.getElementById('routeDriverEta').textContent = leg1.duration.text + ' to pickup';
+
+                /* Leg 2: bakery → customer */
+                svc.route({ origin: BAKERY_POS, destination: dropoff, travelMode: 'DRIVING' }, (result2, status2) => {
+                    if (status2 === 'OK') {
+                        directionsRendererDropoff.setDirections(result2);
+                        const leg2 = result2.routes[0].legs[0];
+                        document.getElementById('etaDropoffTime').textContent = Math.round(leg2.duration.value / 60) + ' min';
+                        document.getElementById('etaDropoffDist').textContent = leg2.distance.text;
+                        const totalMin = Math.round((leg1.duration.value + leg2.duration.value) / 60);
+                        const totalDist = ((leg1.distance.value + leg2.distance.value) / 1000).toFixed(1) + ' km';
+                        document.getElementById('etaTotalTime').textContent = totalMin + ' min';
+                        document.getElementById('etaTotalDist').textContent = totalDist;
+                        document.getElementById('routePickupEta').textContent = leg1.duration.text + ' • ' + leg1.distance.text;
+                        document.getElementById('routeDropEta').textContent = leg2.duration.text + ' • ' + leg2.distance.text;
+                    } else {
+                        console.error('Directions API error (dropoff leg):', status2);
+                    }
+                });
+            } else {
+                console.error('Directions API error (pickup leg):', status);
+            }
+        });
+
+        /* Fit bounds to all 3 points */
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(driverPos); bounds.extend(BAKERY_POS); bounds.extend(dropoff);
+        setTimeout(() => map.fitBounds(bounds, { top: 80, right: 40, bottom: 100, left: 40 }), 300);
+    }
+}
+
+/* ── GPS Tracking — sends to server so customer can see ── */
+function startGPSTracking() {
+    if (!navigator.geolocation) {
+        document.getElementById('gpsText').textContent = 'GPS not supported in this browser';
+        document.getElementById('gpsBar').classList.add('error');
+        return;
+    }
+
+    watchId = navigator.geolocation.watchPosition(
+        pos => {
+            const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            const oldPos = { ...driverPos };
+            driverPos = newPos;
+
+            /* GPS bar */
+            document.getElementById('gpsText').textContent = `GPS Active — ${newPos.lat.toFixed(5)}, ${newPos.lng.toFixed(5)}`;
+            document.getElementById('gpsBar').classList.remove('error');
+            document.getElementById('routeDriverLoc').textContent = `${newPos.lat.toFixed(4)}, ${newPos.lng.toFixed(4)}`;
+
+            /* Move driver marker smoothly */
+            if (driverMarker && map) animateMarkerTo(driverMarker, newPos, 2000);
+
+            /* Send location to server (customer polling picks this up) */
+            fetch('{% url "driver_location" %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+                body: JSON.stringify({
+                    lat: newPos.lat, lng: newPos.lng,
+                    heading: pos.coords.heading || 0,
+                    speed: pos.coords.speed || 0
+                }),
+            }).catch(() => {});
+
+            /* Redraw route when driver moves meaningfully (every 15s min) */
+            const dist = Math.abs(newPos.lat - oldPos.lat) + Math.abs(newPos.lng - oldPos.lng);
+            const now = Date.now();
+            if (dist > 0.0003 && selectedOrderId && (now - lastRouteRedraw > 15000)) {
+                lastRouteRedraw = now;
+                drawRoutes(selectedOrderId);
+            }
+        },
+        err => {
+            document.getElementById('gpsText').textContent = 'GPS unavailable — enable location access';
+            document.getElementById('gpsBar').classList.add('error');
+        },
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+    );
+}
+
+/* ── Select delivery ── */
+function selectDelivery(orderId) {
+    selectedOrderId = orderId;
+    document.querySelectorAll('.delivery-card').forEach(el => el.classList.remove('active'));
+    const card = document.getElementById('dcard-' + orderId);
+    if (card) card.classList.add('active');
+
+    const delivery = DELIVERIES.find(d => d.order_id === orderId);
+    if (delivery) document.getElementById('routeDropAddr').textContent = delivery.address;
+
+    drawRoutes(orderId);
+}
+
+/* ── Map controls ── */
+function centerOnDriver() { if (driverPos && map) { map.panTo(driverPos); map.setZoom(16); } }
+
+function fitAllMarkers() {
+    if (!map) return;
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(driverPos); bounds.extend(BAKERY_POS);
+    Object.values(geocodedAddresses).forEach(pos => bounds.extend(pos));
+    if (!bounds.isEmpty()) map.fitBounds(bounds, 60);
+}
+
+function toggleTraffic() {
+    trafficVisible = !trafficVisible;
+    trafficLayer.setMap(trafficVisible ? map : null);
+}
+
+function openInGoogleMaps(address) {
+    window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(address), '_blank');
+}
+
+/* ── Auto-refresh delivery status every 30s ── */
+setInterval(async () => {
+    try {
+        const resp = await fetch('{% url "driver_active_delivery" %}');
+        const data = await resp.json();
+        if (data.success && data.active_delivery) {
+            const d = DELIVERIES.find(x => x.order_id === data.active_delivery.order_id);
+            if (d && d.status !== data.active_delivery.status) {
+                d.status = data.active_delivery.status;
+                if (selectedOrderId === d.order_id) drawRoutes(d.order_id);
+            }
+        }
+    } catch(e) {}
+}, 30000);
+</script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places&callback=initMap">
+</script>
+{% endblock %}

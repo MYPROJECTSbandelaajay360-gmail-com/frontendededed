@@ -9,7 +9,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.mail import send_mail
-from .models import MenuItem, Order, OrderItem, Payment, UserProfile, Table
+from .models import MenuItem, Order, OrderItem, Payment, UserProfile, Table, DriverLocation, SavedAddress
+from .decorators import admin_required, driver_required
 import json
 import uuid
 import razorpay
@@ -78,6 +79,7 @@ def chatbot_order_view(request):
     })
 
 
+@admin_required
 def admin_dashboard_view(request):
     """Admin dashboard for managing orders"""
     return render(request, 'bakery/admin_dashboard_v2.html')
@@ -153,6 +155,7 @@ def admin_stats_api(request):
     })
 
 
+@admin_required
 def kitchen_portal_view(request):
     """Kitchen staff portal for managing orders"""
     return render(request, 'bakery/kitchen_portal_v2.html')
@@ -197,11 +200,13 @@ def orders_view(request):
         'items__menu_item'
     ).order_by('-created_at')
     
-    # Get current active orders
-    current_orders = orders_queryset.filter(status__in=['pending', 'confirmed', 'preparing', 'ready'])
+    # Get current active orders (include new delivery statuses)
+    current_orders = orders_queryset.filter(
+        status__in=['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way']
+    )
     
     # Get order history
-    order_history = orders_queryset.filter(status__in=['completed', 'cancelled'])
+    order_history = orders_queryset.filter(status__in=['delivered', 'completed', 'cancelled'])
     
     # Calculate statistics
     total_orders = orders_queryset.count()
@@ -224,7 +229,35 @@ def order_detail_view(request, order_id):
     order = get_object_or_404(Order, order_id=order_id, user=request.user)
     return render(request, 'bakery/order_detail.html', {'order': order})
 
+@login_required
+def track_order_view(request, order_id):
+    """Show tracking map for a delivery order"""
+    from django.shortcuts import get_object_or_404
+    order = get_object_or_404(
+        Order.objects.select_related('assigned_driver', 'payment').prefetch_related('items__menu_item'),
+        order_id=order_id, user=request.user
+    )
+    # Driver info
+    driver_info = None
+    driver_location = None
+    if order.assigned_driver:
+        profile = UserProfile.objects.filter(user=order.assigned_driver).first()
+        driver_info = {
+            'name': order.assigned_driver.get_full_name() or order.assigned_driver.username,
+            'phone': profile.phone if profile else '',
+            'vehicle_number': profile.vehicle_number if profile else '',
+            'initial': (order.assigned_driver.first_name or order.assigned_driver.username)[0].upper(),
+        }
+        loc = DriverLocation.objects.filter(driver=order.assigned_driver).first()
+        if loc:
+            driver_location = {'lat': loc.latitude, 'lng': loc.longitude, 'heading': loc.heading}
 
+    context = {
+        'order': order,
+        'driver_info': driver_info,
+        'driver_location_json': json.dumps(driver_location) if driver_location else 'null',
+    }
+    return render(request, 'bakery/track_order.html', context)
 
 @login_required
 def upi_payment_view(request):
@@ -308,9 +341,24 @@ def upi_payment_view(request):
 
 
 # Authentication views
+def _get_role_dashboard(user):
+    """Return the appropriate dashboard URL name for a user's role."""
+    try:
+        role = user.profile.role
+    except Exception:
+        from .models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        role = profile.role
+    if role == 'admin':
+        return 'admin_dashboard'
+    elif role == 'driver':
+        return 'driver_dashboard'
+    return 'index'
+
+
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('index')
+        return redirect(_get_role_dashboard(request.user))
     
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -320,7 +368,11 @@ def login_view(request):
         if user:
             login(request, user)
             messages.success(request, 'Login successful!')
-            return redirect(request.GET.get('next', 'index'))
+            # If there's a ?next= param, honour it; otherwise go to role dashboard
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect(_get_role_dashboard(user))
         else:
             messages.error(request, 'Invalid email or password')
     
@@ -329,7 +381,7 @@ def login_view(request):
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect('index')
+        return redirect(_get_role_dashboard(request.user))
     
     if request.method == 'POST':
         fullname = request.POST.get('fullname', '')
@@ -353,6 +405,8 @@ def signup_view(request):
             first_name=first_name,
             last_name=last_name
         )
+        # Auto-create UserProfile with 'customer' role
+        UserProfile.objects.get_or_create(user=user)
         login(request, user)
         messages.success(request, 'Account created successfully!')
         return redirect('index')
@@ -369,7 +423,7 @@ def logout_view(request):
 def forgot_password_view(request):
     """Show forgot password form and send reset email"""
     if request.user.is_authenticated:
-        return redirect('index')
+        return redirect(_get_role_dashboard(request.user))
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
@@ -978,4 +1032,820 @@ def submit_contact_form(request):
                 'error': 'An error occurred. Please try again later.'
             }, status=500)
     
-    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+# ═══════════════════════════════════════════════════════════
+# ADMIN MANAGEMENT VIEWS
+# ═══════════════════════════════════════════════════════════
+
+@admin_required
+def menu_management_view(request):
+    """Admin: CRUD for menu items"""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'add':
+            MenuItem.objects.create(
+                name=request.POST.get('name'),
+                description=request.POST.get('description', ''),
+                price=request.POST.get('price'),
+                category=request.POST.get('category'),
+                image_url=request.POST.get('image_url', ''),
+                available=request.POST.get('available') == 'on',
+            )
+            messages.success(request, 'Menu item added successfully!')
+
+        elif action == 'edit':
+            item = get_object_or_404(MenuItem, id=request.POST.get('item_id'))
+            item.name = request.POST.get('name')
+            item.description = request.POST.get('description', '')
+            item.price = request.POST.get('price')
+            item.category = request.POST.get('category')
+            item.image_url = request.POST.get('image_url', '')
+            item.available = request.POST.get('available') == 'on'
+            item.save()
+            messages.success(request, f'"{item.name}" updated successfully!')
+
+        elif action == 'delete':
+            item = get_object_or_404(MenuItem, id=request.POST.get('item_id'))
+            name = item.name
+            item.delete()
+            messages.success(request, f'"{name}" deleted successfully!')
+
+        return redirect('menu_management')
+
+    items = MenuItem.objects.all().order_by('category', 'name')
+    categories = MenuItem.CATEGORY_CHOICES
+    return render(request, 'bakery/menu_management.html', {
+        'items': items,
+        'categories': categories,
+    })
+
+
+def send_driver_invite_email(user, temp_password, role='driver'):
+    """Send invite email with login credentials to a newly created driver/admin."""
+    try:
+        if not settings.EMAIL_NOTIFICATIONS_ENABLED:
+            print("📧 Email notifications disabled — skipping invite email")
+            return False
+
+        from django.core.mail import EmailMultiAlternatives
+
+        role_label = role.capitalize()
+        subject = f'🚀 Welcome to {settings.BAKERY_BUSINESS_NAME} — {role_label} Account Created'
+
+        text_content = (
+            f"Hi {user.first_name},\n\n"
+            f"You've been invited as a {role_label} at {settings.BAKERY_BUSINESS_NAME}.\n\n"
+            f"Your login credentials:\n"
+            f"  Username: {user.username}\n"
+            f"  Password: {temp_password}\n\n"
+            f"Please change your password after first login.\n\n"
+            f"— {settings.BAKERY_BUSINESS_NAME} Team"
+        )
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; color: #333; line-height: 1.6; }}
+                .container {{ max-width: 560px; margin: 0 auto; }}
+                .header {{ background: linear-gradient(135deg, #e8590c, #c2410c); color: #fff; padding: 28px; text-align: center; border-radius: 12px 12px 0 0; }}
+                .header h1 {{ margin: 0; font-size: 22px; }}
+                .body {{ background: #f8fafc; padding: 28px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; }}
+                .creds {{ background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 16px 0; }}
+                .creds p {{ margin: 6px 0; font-size: 15px; }}
+                .creds strong {{ color: #1e293b; }}
+                .footer {{ text-align: center; color: #94a3b8; font-size: 13px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Welcome, {user.first_name}!</h1>
+                    <p style="margin:6px 0 0;opacity:0.9;">You've been added as a <strong>{role_label}</strong></p>
+                </div>
+                <div class="body">
+                    <p>Hello <strong>{user.first_name}</strong>,</p>
+                    <p>You've been invited to join <strong>{settings.BAKERY_BUSINESS_NAME}</strong> as a <strong>{role_label}</strong>. Here are your login credentials:</p>
+                    <div class="creds">
+                        <p><strong>Username:</strong> {user.username}</p>
+                        <p><strong>Password:</strong> {temp_password}</p>
+                    </div>
+                    <p style="color:#e8590c;font-weight:600;">⚠️ Please change your password after your first login.</p>
+                    <p>If you have any questions, contact us at <strong>{settings.BAKERY_BUSINESS_PHONE}</strong>.</p>
+                    <div class="footer">
+                        <p>— {settings.BAKERY_BUSINESS_NAME} Team<br>{settings.BAKERY_BUSINESS_ADDRESS}</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        admin_email = getattr(settings, 'ADMIN_EMAIL', settings.EMAIL_HOST_USER)
+        msg = EmailMultiAlternatives(subject, text_content, admin_email, [user.email])
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
+        print(f"✅ Invite email sent to {user.email}")
+        return True
+
+    except Exception as e:
+        print(f"❌ Failed to send invite email: {e}")
+        return False
+
+
+@admin_required
+def user_management_view(request):
+    """Admin: list and search users, invite new drivers/admins"""
+
+    # Handle invite driver POST
+    if request.method == 'POST' and request.POST.get('action') == 'invite_driver':
+        email = request.POST.get('email', '').strip()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        vehicle_number = request.POST.get('vehicle_number', '').strip()
+        role = request.POST.get('role', 'driver')
+
+        if not email or not first_name:
+            messages.error(request, 'First name and email are required.')
+            return redirect('user_management')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, f'A user with email {email} already exists.')
+            return redirect('user_management')
+
+        # Generate username from email prefix
+        username_base = email.split('@')[0].lower()
+        username = username_base
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{username_base}{counter}"
+            counter += 1
+
+        # Generate random temp password
+        import string, secrets
+        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+
+        # Create user
+        new_user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=temp_password,
+            first_name=first_name,
+            last_name=last_name,
+        )
+
+        # Create/update profile
+        profile, _ = UserProfile.objects.get_or_create(user=new_user)
+        profile.role = role if role in dict(UserProfile.ROLE_CHOICES) else 'driver'
+        if phone:
+            profile.phone = phone
+        if vehicle_number:
+            profile.vehicle_number = vehicle_number
+        profile.save()
+
+        # Send invite email
+        email_sent = send_driver_invite_email(new_user, temp_password, role=profile.role)
+
+        role_label = profile.get_role_display()
+        if email_sent:
+            messages.success(request, f'{role_label} account created for {first_name} ({email}). Login credentials sent via email.')
+        else:
+            messages.warning(request, f'{role_label} account created for {first_name}. Email could not be sent — credentials: username={username}, password={temp_password}')
+
+        return redirect('user_management')
+
+    # GET — list users
+    search = request.GET.get('search', '').strip()
+    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    if search:
+        users = users.filter(
+            Q(username__icontains=search) |
+            Q(email__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search)
+        )
+    
+    admin_count = users.filter(profile__role='admin').count()
+    driver_count = users.filter(profile__role='driver').count()
+    customer_count = users.filter(profile__role='customer').count()
+    
+    return render(request, 'bakery/user_management.html', {
+        'users': users, 
+        'search': search,
+        'admin_count': admin_count,
+        'driver_count': driver_count,
+        'customer_count': customer_count,
+    })
+
+
+@admin_required
+def role_management_view(request):
+    """Admin: assign/change roles"""
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        new_role = request.POST.get('role')
+        if new_role in dict(UserProfile.ROLE_CHOICES):
+            target_user = get_object_or_404(User, id=user_id)
+            profile, _ = UserProfile.objects.get_or_create(user=target_user)
+            profile.role = new_role
+            profile.save()
+            messages.success(request, f'Role for {target_user.email} changed to {profile.get_role_display()}')
+        else:
+            messages.error(request, 'Invalid role selected.')
+        return redirect('role_management')
+
+    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    roles = UserProfile.ROLE_CHOICES
+    return render(request, 'bakery/role_management.html', {'users': users, 'roles': roles})
+
+
+@admin_required
+def payment_management_view(request):
+    """Admin: list all payments"""
+    status_filter = request.GET.get('status', '')
+    payments = Payment.objects.all().select_related('order', 'order__user').order_by('-created_at')
+    if status_filter:
+        payments = payments.filter(payment_status=status_filter)
+    return render(request, 'bakery/payment_management.html', {
+        'payments': payments,
+        'status_filter': status_filter,
+    })
+
+
+# ═══════════════════════════════════════════════════════════
+# DRIVER VIEWS
+# ═══════════════════════════════════════════════════════════
+
+@driver_required
+def driver_dashboard_view(request):
+    """Driver: main dashboard with stats, today's deliveries, earnings summary."""
+    today = timezone.now().date()
+    driver = request.user
+
+    # Today's assigned deliveries
+    todays_orders = Order.objects.filter(
+        assigned_driver=driver,
+        created_at__date=today,
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    # Also show unassigned delivery orders ready for pickup
+    unassigned_orders = Order.objects.filter(
+        order_type='delivery',
+        assigned_driver__isnull=True,
+        status__in=['confirmed', 'preparing', 'ready'],
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    # Earnings today
+    completed_today = Order.objects.filter(
+        assigned_driver=driver,
+        status='completed',
+        delivered_at__date=today,
+    )
+    todays_earnings = completed_today.aggregate(
+        total=Sum('delivery_fee')
+    )['total'] or Decimal('0.00')
+    completed_count = completed_today.count()
+
+    pending_count = todays_orders.filter(
+        status__in=['confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way']
+    ).count()
+
+    context = {
+        'todays_orders': todays_orders,
+        'unassigned_orders': unassigned_orders,
+        'todays_earnings': todays_earnings,
+        'completed_count': completed_count,
+        'pending_count': pending_count,
+        'delivery_count': todays_orders.count(),
+        'page_title': 'Dashboard',
+    }
+    return render(request, 'bakery/driver_dashboard.html', context)
+
+
+@driver_required
+def driver_orders_view(request):
+    """Driver: all orders with status filtering."""
+    driver = request.user
+    status_filter = request.GET.get('status', 'all')
+
+    orders = Order.objects.filter(
+        assigned_driver=driver,
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    if status_filter and status_filter != 'all':
+        orders = orders.filter(status=status_filter)
+
+    # Also show unassigned orders for the driver to accept
+    unassigned = Order.objects.filter(
+        order_type='delivery',
+        assigned_driver__isnull=True,
+        status__in=['confirmed', 'preparing', 'ready'],
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    context = {
+        'orders': orders,
+        'unassigned_orders': unassigned,
+        'status_filter': status_filter,
+        'page_title': 'Orders',
+    }
+    return render(request, 'bakery/driver_orders.html', context)
+
+
+@driver_required
+def driver_map_view(request):
+    """Driver: full Google Maps page with real-time navigation — Swiggy/Zomato style."""
+    driver = request.user
+    active_orders = Order.objects.filter(
+        assigned_driver=driver,
+        status__in=['confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way'],
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    # Build delivery data for JavaScript
+    deliveries = []
+    for order in active_orders:
+        items = [{'name': i.menu_item.name, 'qty': i.quantity, 'price': str(i.price)} for i in order.items.all()]
+        customer_profile = UserProfile.objects.filter(user=order.user).first() if order.user else None
+        deliveries.append({
+            'order_id': order.order_id,
+            'order_pk': order.id,
+            'customer': order.user.get_full_name() if order.user else order.customer_name or 'Guest',
+            'address': order.delivery_address or 'No address',
+            'phone': order.delivery_phone or (customer_profile.phone if customer_profile else ''),
+            'amount': str(order.grand_total),
+            'delivery_fee': str(order.delivery_fee),
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'items': items,
+            'notes': order.delivery_notes or '',
+            'created_at': order.created_at.strftime('%I:%M %p'),
+        })
+
+    # Get driver's current GPS location from DB
+    driver_loc = DriverLocation.objects.filter(driver=driver).first()
+    driver_location_json = json.dumps(
+        {'lat': driver_loc.latitude, 'lng': driver_loc.longitude} if driver_loc else None
+    )
+
+    context = {
+        'active_orders': active_orders,
+        'deliveries_json': json.dumps(deliveries),
+        'driver_location_json': driver_location_json,
+        'page_title': 'Delivery Map',
+    }
+    return render(request, 'bakery/driver_map.html', context)
+
+
+@driver_required
+def driver_earnings_view(request):
+    """Driver: earnings breakdown and history."""
+    driver = request.user
+    today = timezone.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    month_start = today.replace(day=1)
+
+    def get_earnings(start_date, end_date=None):
+        qs = Order.objects.filter(
+            assigned_driver=driver,
+            status='completed',
+        )
+        if end_date:
+            qs = qs.filter(delivered_at__date__gte=start_date, delivered_at__date__lte=end_date)
+        else:
+            qs = qs.filter(delivered_at__date=start_date)
+        agg = qs.aggregate(
+            total=Sum('delivery_fee'),
+            count=Count('id'),
+        )
+        return agg['total'] or Decimal('0.00'), agg['count'] or 0
+
+    today_earnings, today_count = get_earnings(today)
+    week_earnings, week_count = get_earnings(week_start, today)
+    month_earnings, month_count = get_earnings(month_start, today)
+
+    # Last 7 days earnings for chart
+    daily_earnings = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        amount, count = get_earnings(day)
+        daily_earnings.append({
+            'date': day.strftime('%a'),
+            'amount': float(amount),
+            'count': count,
+        })
+
+    # Recent completed orders
+    recent_deliveries = Order.objects.filter(
+        assigned_driver=driver,
+        status='completed',
+    ).select_related('user').order_by('-delivered_at')[:20]
+
+    context = {
+        'today_earnings': today_earnings,
+        'today_count': today_count,
+        'week_earnings': week_earnings,
+        'week_count': week_count,
+        'month_earnings': month_earnings,
+        'month_count': month_count,
+        'daily_earnings_json': json.dumps(daily_earnings),
+        'recent_deliveries': recent_deliveries,
+        'page_title': 'Earnings',
+    }
+    return render(request, 'bakery/driver_earnings.html', context)
+
+
+@driver_required
+def driver_settings_view(request):
+    """Driver: profile and settings management."""
+    driver = request.user
+    profile = UserProfile.objects.get_or_create(user=driver)[0]
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'update_profile':
+            driver.first_name = request.POST.get('first_name', driver.first_name)
+            driver.last_name = request.POST.get('last_name', driver.last_name)
+            driver.save()
+            profile.phone = request.POST.get('phone', profile.phone)
+            profile.vehicle_number = request.POST.get('vehicle_number', profile.vehicle_number)
+            profile.address = request.POST.get('address', profile.address)
+            profile.city = request.POST.get('city', profile.city)
+            profile.save()
+            messages.success(request, 'Profile updated successfully!')
+
+        elif action == 'toggle_availability':
+            profile.is_available = not profile.is_available
+            profile.save()
+            status = 'Online' if profile.is_available else 'Offline'
+            messages.success(request, f'You are now {status}')
+
+        return redirect('driver_settings')
+
+    context = {
+        'profile': profile,
+        'page_title': 'Settings',
+    }
+    return render(request, 'bakery/driver_settings.html', context)
+
+
+# ── Driver API Endpoints ──────────────────────────────────────────────────────
+
+@driver_required
+def driver_stats_api(request):
+    """API: Return driver dashboard stats as JSON."""
+    driver = request.user
+    today = timezone.now().date()
+
+    completed = Order.objects.filter(
+        assigned_driver=driver, status__in=['delivered', 'completed'], delivered_at__date=today,
+    )
+    pending = Order.objects.filter(
+        assigned_driver=driver, status__in=['confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way'],
+    )
+    earnings = completed.aggregate(total=Sum('delivery_fee'))['total'] or 0
+
+    return JsonResponse({
+        'todays_earnings': float(earnings),
+        'completed_count': completed.count(),
+        'pending_count': pending.count(),
+    })
+
+
+@csrf_exempt
+@driver_required
+def driver_update_status_api(request):
+    """API: Update order status from driver panel."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        data = request.POST
+
+    order_id = data.get('order_id')
+    new_status = data.get('status')
+    action = data.get('action')  # accept, pickup, on_the_way, delivered
+
+    if not order_id:
+        return JsonResponse({'error': 'order_id required'}, status=400)
+
+    try:
+        order = Order.objects.get(order_id=order_id)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+    now = timezone.now()
+
+    if action == 'accept':
+        order.assigned_driver = request.user
+        order.status = 'confirmed'
+        order.confirmed_at = now
+    elif action == 'pickup':
+        order.status = 'picked_up'
+        order.picked_up_at = now
+    elif action == 'on_the_way':
+        order.status = 'on_the_way'
+    elif action == 'delivered':
+        order.status = 'delivered'
+        order.delivered_at = now
+        order.completed_at = now
+    elif new_status:
+        order.status = new_status
+    else:
+        return JsonResponse({'error': 'action or status required'}, status=400)
+
+    order.save()
+
+    # Return driver info for customer tracking
+    driver_data = None
+    if order.assigned_driver:
+        profile = UserProfile.objects.filter(user=order.assigned_driver).first()
+        driver_data = {
+            'name': order.assigned_driver.get_full_name() or order.assigned_driver.username,
+            'phone': profile.phone if profile else '',
+            'vehicle_number': profile.vehicle_number if profile else '',
+        }
+
+    return JsonResponse({
+        'success': True,
+        'order_id': order.order_id,
+        'new_status': order.status,
+        'driver': driver_data,
+    })
+
+
+@csrf_exempt
+@driver_required
+def driver_location_api(request):
+    """API: Receive and store driver GPS location in DB."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    lat = data.get('lat')
+    lng = data.get('lng')
+    heading = data.get('heading', 0)
+    speed = data.get('speed', 0)
+
+    if lat is None or lng is None:
+        return JsonResponse({'error': 'lat and lng required'}, status=400)
+
+    # Store in DriverLocation model
+    loc, created = DriverLocation.objects.update_or_create(
+        driver=request.user,
+        defaults={
+            'latitude': lat,
+            'longitude': lng,
+            'heading': heading,
+            'speed': speed,
+        }
+    )
+
+    return JsonResponse({'success': True, 'lat': lat, 'lng': lng})
+
+
+@csrf_exempt
+@driver_required
+def driver_toggle_availability_api(request):
+    """API: Toggle driver availability status."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    profile = UserProfile.objects.get_or_create(user=request.user)[0]
+    profile.is_available = not profile.is_available
+    profile.save()
+
+    return JsonResponse({
+        'success': True,
+        'is_available': profile.is_available,
+    })
+
+
+# ══════════════════════════════════════════════════════════════
+# TRACKING API ENDPOINTS  (Customer ↔ Driver real-time bridge)
+# ══════════════════════════════════════════════════════════════
+
+@csrf_exempt
+@login_required
+def tracking_data_api(request, order_id):
+    """API: Customer polls this to get driver location + order status in real-time."""
+    try:
+        order = Order.objects.select_related('assigned_driver', 'payment').prefetch_related('items__menu_item').get(
+            order_id=order_id, user=request.user
+        )
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+
+    # Driver info
+    driver_data = None
+    driver_location = None
+    if order.assigned_driver:
+        profile = UserProfile.objects.filter(user=order.assigned_driver).first()
+        driver_data = {
+            'id': order.assigned_driver.id,
+            'name': order.assigned_driver.get_full_name() or order.assigned_driver.username,
+            'phone': profile.phone if profile else '',
+            'vehicle_number': profile.vehicle_number if profile else '',
+            'initial': (order.assigned_driver.first_name or order.assigned_driver.username)[0].upper(),
+        }
+        # Get driver's real-time location
+        loc = DriverLocation.objects.filter(driver=order.assigned_driver).first()
+        if loc:
+            driver_location = {
+                'lat': loc.latitude,
+                'lng': loc.longitude,
+                'heading': loc.heading,
+                'speed': loc.speed,
+                'updated_at': loc.updated_at.isoformat(),
+            }
+
+    return JsonResponse({
+        'success': True,
+        'order_id': order.order_id,
+        'status': order.status,
+        'status_display': order.get_status_display(),
+        'order_type': order.order_type,
+        'delivery_address': order.delivery_address,
+        'created_at': order.created_at.isoformat(),
+        'confirmed_at': order.confirmed_at.isoformat() if order.confirmed_at else None,
+        'ready_at': order.ready_at.isoformat() if order.ready_at else None,
+        'picked_up_at': order.picked_up_at.isoformat() if order.picked_up_at else None,
+        'delivered_at': order.delivered_at.isoformat() if order.delivered_at else None,
+        'completed_at': order.completed_at.isoformat() if order.completed_at else None,
+        'driver': driver_data,
+        'driver_location': driver_location,
+    })
+
+
+@csrf_exempt
+def available_delivery_orders_api(request):
+    """API: Returns delivery orders that are ready and unassigned — for drivers to accept."""
+    orders = Order.objects.filter(
+        order_type='delivery',
+        assigned_driver__isnull=True,
+        status__in=['confirmed', 'preparing', 'ready'],
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at')
+
+    orders_data = []
+    for order in orders:
+        items = [{'name': i.menu_item.name, 'qty': i.quantity, 'price': str(i.price)} for i in order.items.all()]
+        orders_data.append({
+            'order_id': order.order_id,
+            'customer_name': order.user.get_full_name() if order.user else order.customer_name or 'Guest',
+            'customer_phone': order.delivery_phone,
+            'delivery_address': order.delivery_address,
+            'total_amount': str(order.grand_total),
+            'delivery_fee': str(order.delivery_fee),
+            'items': items,
+            'status': order.status,
+            'created_at': order.created_at.isoformat(),
+        })
+
+    return JsonResponse({'success': True, 'orders': orders_data})
+
+
+@csrf_exempt
+@login_required
+def driver_active_delivery_api(request):
+    """API: Returns the driver's current active delivery with customer details."""
+    if request.method != 'GET':
+        return JsonResponse({'error': 'GET required'}, status=405)
+
+    order = Order.objects.filter(
+        assigned_driver=request.user,
+        status__in=['confirmed', 'preparing', 'ready', 'picked_up', 'on_the_way'],
+    ).select_related('user').prefetch_related('items__menu_item').order_by('-created_at').first()
+
+    if not order:
+        return JsonResponse({'success': True, 'active_delivery': None})
+
+    customer_profile = UserProfile.objects.filter(user=order.user).first() if order.user else None
+    items = [{'name': i.menu_item.name, 'qty': i.quantity, 'price': str(i.price)} for i in order.items.all()]
+
+    return JsonResponse({
+        'success': True,
+        'active_delivery': {
+            'order_id': order.order_id,
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'customer': {
+                'name': order.user.get_full_name() if order.user else order.customer_name or 'Guest',
+                'phone': order.delivery_phone or (customer_profile.phone if customer_profile else ''),
+            },
+            'delivery_address': order.delivery_address,
+            'delivery_notes': order.delivery_notes,
+            'total_amount': str(order.grand_total),
+            'delivery_fee': str(order.delivery_fee),
+            'items': items,
+            'created_at': order.created_at.isoformat(),
+            'picked_up_at': order.picked_up_at.isoformat() if order.picked_up_at else None,
+        }
+    })
+
+
+# ═══════════════════════════════════════════════════════════════
+#  SAVED ADDRESS APIs (Swiggy-style — max 2 per user)
+# ═══════════════════════════════════════════════════════════════
+
+@login_required
+def get_saved_addresses_api(request):
+    """Return the user's saved addresses (max 2)."""
+    addresses = SavedAddress.objects.filter(user=request.user)[:2]
+    data = []
+    for addr in addresses:
+        data.append({
+            'id': addr.id,
+            'label': addr.label,
+            'house_flat': addr.house_flat,
+            'area_street': addr.area_street,
+            'landmark': addr.landmark,
+            'city': addr.city,
+            'pincode': addr.pincode,
+            'latitude': addr.latitude,
+            'longitude': addr.longitude,
+            'full_address': addr.full_address,
+            'is_default': addr.is_default,
+        })
+    return JsonResponse({'success': True, 'addresses': data})
+
+
+@csrf_exempt
+@login_required
+def save_address_api(request):
+    """Save or update a delivery address for the user (max 2 total)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    address_id = data.get('id')  # if set, update existing
+    house_flat = data.get('house_flat', '').strip()
+    area_street = data.get('area_street', '').strip()
+    landmark = data.get('landmark', '').strip()
+    city = data.get('city', 'Hyderabad').strip()
+    pincode = data.get('pincode', '').strip()
+    label = data.get('label', 'home')
+    lat = data.get('latitude')
+    lng = data.get('longitude')
+    is_default = data.get('is_default', False)
+
+    if not house_flat or not area_street:
+        return JsonResponse({'error': 'house_flat and area_street are required'}, status=400)
+
+    # Max 2 addresses per user
+    existing_count = SavedAddress.objects.filter(user=request.user).count()
+
+    if address_id:
+        try:
+            addr = SavedAddress.objects.get(id=address_id, user=request.user)
+        except SavedAddress.DoesNotExist:
+            return JsonResponse({'error': 'Address not found'}, status=404)
+    else:
+        if existing_count >= 2:
+            return JsonResponse({
+                'error': 'Maximum 2 addresses allowed. Delete one to add a new address.',
+                'limit_reached': True
+            }, status=400)
+        addr = SavedAddress(user=request.user)
+
+    addr.house_flat = house_flat
+    addr.area_street = area_street
+    addr.landmark = landmark
+    addr.city = city
+    addr.pincode = pincode
+    addr.label = label
+    if lat is not None:
+        addr.latitude = float(lat)
+    if lng is not None:
+        addr.longitude = float(lng)
+
+    if is_default:
+        SavedAddress.objects.filter(user=request.user).update(is_default=False)
+        addr.is_default = True
+
+    addr.save()
+    return JsonResponse({'success': True, 'id': addr.id, 'full_address': addr.full_address})
+
+
+@csrf_exempt
+@login_required
+def delete_address_api(request, address_id):
+    """Delete a saved address."""
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'DELETE required'}, status=405)
+    try:
+        addr = SavedAddress.objects.get(id=address_id, user=request.user)
+        addr.delete()
+        return JsonResponse({'success': True})
+    except SavedAddress.DoesNotExist:
+        return JsonResponse({'error': 'Address not found'}, status=404)

@@ -16,22 +16,155 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #fdf6ee;
-            color: #333;
+            background: #f8f9fa;
+            color: #2d3748;
+            overflow-x: hidden;
         }
 
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #d2691e 0%, #8b4513 100%);
+        /* Dashboard layout */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            transition: margin-left 0.3s;
+        }
+
+        /* collapsed state when sidebar hidden */
+        .dashboard.collapsed .sidebar {
+            transform: translateX(-260px);
+        }
+        .dashboard.collapsed .main-content {
+            margin-left: 0;
+            width: 100%;
+        }
+        .dashboard.collapsed .topbar {
+            display: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
             color: white;
+            padding: 0;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #f7fafc;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: #B8935E;
+        }
+
+        .user-info {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #B8935E, #D4B896);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .user-details h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-details p {
+            font-size: 13px;
+            color: #a0aec0;
+        }
+
+        .nav-section {
+            padding: 20px 0;
+        }
+
+        .nav-label {
+            padding: 0 24px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #e2e8f0;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.08);
+            border-left-color: #B8935E;
+            color: #fff;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .main-content {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+        }
+
+        .topbar {
+            background: #fff;
             padding: 20px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* secondary header (retained from original design) */
+        .header {
+            background: #fff;
+            color: #2d3748;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            margin-top: 16px;
         }
 
         .header-left {
@@ -40,18 +173,19 @@
             gap: 20px;
         }
 
-        .logo {
+        .header-left .logo {
             font-family: 'Pacifico', cursive;
             font-size: 28px;
             font-weight: 400;
             display: flex;
             align-items: center;
             gap: 12px;
+            color: #2d3748;
         }
 
-        .logo i {
+        .header-left .logo i {
             font-size: 32px;
-            color: #fff8dc;
+            color: #B8935E;
         }
 
         .kitchen-badge {
@@ -60,8 +194,8 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
-            border: 1px solid #fff8dc;
-            color: #fff8dc;
+            border: 1px solid #B8935E;
+            color: #2d3748;
         }
 
         .header-right {
@@ -82,7 +216,7 @@
 
         .live-time .date {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #718096;
         }
 
         .staff-info {
@@ -90,7 +224,7 @@
             align-items: center;
             gap: 12px;
             padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.15);
+            background: #f7fafc;
             border-radius: 12px;
         }
 
@@ -98,8 +232,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #fff8dc;
-            color: #d2691e;
+            background: #B8935E;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -113,7 +247,64 @@
 
         .staff-details p {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #718096;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .topbar-left h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        /* hamburger button */
+        .hamburger {
+            width: 30px;
+            height: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .hamburger span {
+            display: block;
+            height: 3px;
+            background: #2d3748;
+            border-radius: 2px;
+        }
+
+
+        .topbar-left p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .topbar-right .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #4caf50;
+        }
+
+        .topbar-right .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: #4a5568;
+            font-size: 14px;
+            cursor: pointer;
         }
 
         /* Stats Bar */
@@ -202,14 +393,15 @@
         /* Orders Grid */
         .orders-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
+            /* reduced min width to 80% (272px) for overall smaller cards */
+            grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+            gap: 16px; /* slightly smaller gap to match scaling */
         }
 
         .order-card {
             background: white;
             border-radius: 14px;
-            padding: 20px;
+            padding: 16px; /* 20% smaller padding */
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
             border-top: 4px solid #d2691e;
@@ -527,6 +719,84 @@
     </style>
 </head>
 <body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-store"></i>
+                    <span>thebakestory</span>
+                </div>
+            </div>
+
+            <div class="user-info">
+                <div class="user-avatar">K</div>
+                <div class="user-details">
+                    <h4>Kitchen Staff</h4>
+                    <p>Active Now</p>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Main Menu</div>
+                <a href="{% url 'admin_dashboard' %}" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                <a href="{% url 'kitchen_portal' %}" class="nav-item active">
+                    <i class="fas fa-utensils"></i>
+                    <span>Kitchen Portal</span>
+                </a>
+                <a href="{% url 'menu_management' %}" class="nav-item">
+                    <i class="fas fa-book-open"></i>
+                    <span>Menu Management</span>
+                </a>
+                <a href="{% url 'payment_management' %}" class="nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="{% url 'user_management' %}" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="{% url 'role_management' %}" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Role Management</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <a href="{% url 'logout' %}" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div class="hamburger" id="sidebarToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <h1>Kitchen Portal</h1>
+                    <p>Manage incoming orders and update their status in real-time</p>
+                </div>
+                <div class="topbar-right">
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>Live</span>
+                    </div>
+                    <button class="refresh-btn" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
     <!-- Header -->
     <div class="header">
         <div class="header-left">
@@ -611,6 +881,9 @@
             </div>
         </div>
     </div>
+
+        </div> <!-- end main-content -->
+    </div> <!-- end dashboard -->
 
     <!-- Toast Notification -->
     <div class="toast" id="toast">
@@ -774,15 +1047,40 @@
             return card;
         }
 
+        // helper: read CSRF cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
         async function updateOrderStatus(orderId, newStatus) {
             try {
+                const csrfToken = getCookie('csrftoken') || '{{ csrf_token }}';
                 const response = await fetch(`/api/orders/${orderId}/update-status/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
                     },
                     body: JSON.stringify({ status: newStatus })
                 });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error('Server responded with', response.status, errText);
+                    showToast('Error updating order', 'error');
+                    return;
+                }
 
                 const result = await response.json();
                 
@@ -791,7 +1089,7 @@
                     // Refresh orders
                     await fetchKitchenOrders();
                 } else {
-                    showToast('Error updating order', 'error');
+                    showToast(result.error || 'Error updating order', 'error');
                 }
             } catch (error) {
                 console.error('Error updating order status:', error);
@@ -825,6 +1123,12 @@
 
         // Auto-refresh every 10 seconds
         setInterval(fetchKitchenOrders, 10000);
+
+        // sidebar toggle / collapse handler
+        const toggleBtn = document.getElementById('sidebarToggle');
+        toggleBtn.addEventListener('click', () => {
+            document.querySelector('.dashboard').classList.toggle('collapsed');
+        });
     </script>
 </body>
 </html>

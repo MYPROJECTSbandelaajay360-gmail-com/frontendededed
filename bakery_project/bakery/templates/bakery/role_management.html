@@ -1,0 +1,309 @@
+{% extends 'bakery/base.html' %}
+{% load static %}
+
+{% block title %}Role Management - TheBakeStory{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ═══════════════════════════════════════════════════════════
+       ROLE MANAGEMENT — Admin Panel Redesign
+       ═══════════════════════════════════════════════════════════ */
+    .admin-page {
+        padding: 70px 24px 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+        min-height: 100vh;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .page-header h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .page-header h1 i { color: #e8590c; }
+    .page-subtitle {
+        color: #64748b;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    /* Role Legend */
+    .role-legend {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .legend-item .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .legend-item.admin .dot { background: #dc2626; }
+    .legend-item.admin { color: #dc2626; }
+    .legend-item.driver .dot { background: #2563eb; }
+    .legend-item.driver { color: #2563eb; }
+    .legend-item.customer .dot { background: #16a34a; }
+    .legend-item.customer { color: #16a34a; }
+
+    /* Role Cards */
+    .roles-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .role-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        transition: all 0.2s;
+    }
+    .role-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+        border-color: #e8590c40;
+    }
+    .role-card-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex: 1;
+    }
+    .role-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .role-user-info h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .role-user-info p {
+        margin: 2px 0 0;
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    /* Role Badges */
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .role-badge.admin {
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        color: #dc2626;
+    }
+    .role-badge.driver {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        color: #2563eb;
+    }
+    .role-badge.customer {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #16a34a;
+    }
+
+    /* Role Form */
+    .role-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .role-select {
+        padding: 8px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        background: #fff;
+        min-width: 130px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .role-select:focus {
+        outline: none;
+        border-color: #e8590c;
+        box-shadow: 0 0 0 3px rgba(232,89,12,0.1);
+    }
+    .btn-save {
+        padding: 8px 18px;
+        background: linear-gradient(135deg, #e8590c, #c2410c);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(232,89,12,0.3);
+    }
+
+    /* Success Message */
+    .alert-success {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #166534;
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #86efac;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .empty-state i {
+        font-size: 48px;
+        color: #e2e8f0;
+        margin-bottom: 12px;
+    }
+    .empty-state p {
+        color: #94a3b8;
+        font-size: 14px;
+    }
+
+    @media (max-width: 640px) {
+        .admin-page { padding: 60px 12px 12px; }
+        .role-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .role-form {
+            width: 100%;
+        }
+        .role-select { flex: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1><i class="fas fa-user-shield"></i> Role Management</h1>
+            <p class="page-subtitle">Assign and change user roles to control access levels</p>
+        </div>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert-success"><i class="fas fa-check-circle"></i> {{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Role Legend -->
+    <div class="role-legend">
+        <div class="legend-item admin">
+            <div class="dot"></div>
+            <i class="fas fa-shield-alt"></i> Admin — Full access
+        </div>
+        <div class="legend-item driver">
+            <div class="dot"></div>
+            <i class="fas fa-motorcycle"></i> Driver — Delivery panel
+        </div>
+        <div class="legend-item customer">
+            <div class="dot"></div>
+            <i class="fas fa-shopping-bag"></i> Customer — Standard access
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="roles-list">
+        {% for u in users %}
+        <div class="role-card">
+            <div class="role-card-left">
+                <img src="https://ui-avatars.com/api/?name={{ u.first_name|default:u.username }}+{{ u.last_name|default:'' }}&background=e8590c&color=fff&bold=true&size=42&rounded=true"
+                    alt="Avatar" class="role-avatar">
+                <div class="role-user-info">
+                    <h4>
+                        {{ u.first_name|default:u.username }} {{ u.last_name|default:"" }}
+                        {% if u.profile.role == 'admin' %}
+                        <span class="role-badge admin"><i class="fas fa-shield-alt"></i> Admin</span>
+                        {% elif u.profile.role == 'driver' %}
+                        <span class="role-badge driver"><i class="fas fa-motorcycle"></i> Driver</span>
+                        {% else %}
+                        <span class="role-badge customer"><i class="fas fa-user"></i> Customer</span>
+                        {% endif %}
+                    </h4>
+                    <p>{{ u.email|default:"No email" }} &middot; @{{ u.username }}</p>
+                </div>
+            </div>
+            <form method="post" class="role-form">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ u.id }}">
+                <select name="role" class="role-select">
+                    {% for value, label in roles %}
+                    <option value="{{ value }}" {% if u.profile.role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-save"><i class="fas fa-save"></i> Update</button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No users found</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

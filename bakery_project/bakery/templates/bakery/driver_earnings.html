@@ -1,0 +1,290 @@
+{% extends 'bakery/driver_base.html' %}
+
+{% block title %}Earnings - Driver Panel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .earnings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .earnings-header h1 {
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .earnings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    @media (max-width: 768px) {
+        .earnings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .earnings-stat {
+        padding: 22px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .earnings-stat::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .earnings-stat.today::before {
+        background: var(--primary);
+    }
+
+    .earnings-stat.week::before {
+        background: var(--info);
+    }
+
+    .earnings-stat.month::before {
+        background: var(--success);
+    }
+
+    .earnings-stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        font-size: 18px;
+    }
+
+    .today .earnings-stat-icon {
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+
+    .week .earnings-stat-icon {
+        background: var(--info-bg);
+        color: var(--info);
+    }
+
+    .month .earnings-stat-icon {
+        background: var(--success-bg);
+        color: var(--success);
+    }
+
+    .earnings-value {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .earnings-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .earnings-label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .chart-container {
+        padding: 22px;
+        margin-bottom: 24px;
+    }
+
+    .chart-wrapper {
+        height: 260px;
+        position: relative;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .history-table th {
+        text-align: left;
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .history-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .history-table tr:hover td {
+        background: var(--primary-bg);
+    }
+
+    .history-table .amount {
+        font-weight: 700;
+        color: var(--success);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="earnings-header">
+    <h1>💰 Earnings</h1>
+</div>
+
+<!-- Earnings Stats -->
+<div class="earnings-grid">
+    <div class="card earnings-stat today">
+        <div class="earnings-stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="earnings-value">₹{{ today_earnings }}</div>
+        <div class="earnings-sub">{{ today_count }} deliver{{ today_count|pluralize:"y,ies" }}</div>
+        <div class="earnings-label">Today</div>
+    </div>
+    <div class="card earnings-stat week">
+        <div class="earnings-stat-icon"><i class="fas fa-calendar-week"></i></div>
+        <div class="earnings-value">₹{{ week_earnings }}</div>
+        <div class="earnings-sub">{{ week_count }} deliver{{ week_count|pluralize:"y,ies" }}</div>
+        <div class="earnings-label">This Week</div>
+    </div>
+    <div class="card earnings-stat month">
+        <div class="earnings-stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="earnings-value">₹{{ month_earnings }}</div>
+        <div class="earnings-sub">{{ month_count }} deliver{{ month_count|pluralize:"y,ies" }}</div>
+        <div class="earnings-label">This Month</div>
+    </div>
+</div>
+
+<!-- Earnings Chart -->
+<div class="card chart-container">
+    <div class="card-header" style="padding:0 0 16px 0;border:none;">
+        <span><i class="fas fa-chart-bar" style="color:var(--primary);margin-right:8px;"></i> Last 7 Days</span>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="earningsChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent Delivery History -->
+<div class="card">
+    <div class="card-header">
+        <span><i class="fas fa-history" style="color:var(--primary);margin-right:8px;"></i> Recent Deliveries</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Delivery Fee</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_deliveries %}
+                <tr>
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>{{ order.user.first_name|default:order.user.username }} {{ order.user.last_name|default:'' }}
+                    </td>
+                    <td>{{ order.delivered_at|date:"d M, H:i"|default:"—" }}</td>
+                    <td class="amount">₹{{ order.delivery_fee }}</td>
+                    <td>₹{{ order.total_amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:40px 20px;color:var(--text-secondary);">
+                        <i class="fas fa-inbox" style="display:block;font-size:28px;margin-bottom:8px;"></i>
+                        No completed deliveries yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    const dailyData = {{ daily_earnings_json| safe }};
+    const ctx = document.getElementById('earningsChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dailyData.map(d => d.date),
+            datasets: [{
+                label: 'Earnings (₹)',
+                data: dailyData.map(d => d.amount),
+                backgroundColor: 'rgba(232, 89, 12, 0.15)',
+                borderColor: '#e8590c',
+                borderWidth: 2,
+                borderRadius: 6,
+                hoverBackgroundColor: 'rgba(232, 89, 12, 0.3)',
+            }, {
+                label: 'Deliveries',
+                data: dailyData.map(d => d.count),
+                type: 'line',
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#2563eb',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                fill: true,
+                yAxisID: 'y1',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: true, position: 'top', labels: { usePointStyle: true, font: { family: 'Inter', size: 12 } } },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleFont: { family: 'Inter' },
+                    bodyFont: { family: 'Inter' },
+                    padding: 12,
+                    cornerRadius: 8,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true, position: 'left',
+                    ticks: { font: { family: 'Inter', size: 12 }, callback: v => '₹' + v },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                },
+                y1: {
+                    beginAtZero: true, position: 'right',
+                    ticks: { font: { family: 'Inter', size: 12 }, stepSize: 1 },
+                    grid: { display: false },
+                },
+                x: {
+                    ticks: { font: { family: 'Inter', size: 12 } },
+                    grid: { display: false },
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -82,6 +82,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'bakery.context_processors.user_role',
+                'bakery.context_processors.google_maps_key',
             ],
         },
     },
@@ -149,6 +151,10 @@ LOGOUT_REDIRECT_URL = '/'
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
 
+# ─── Google Maps ──────────────────────────────────────────────────────────────
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+GOOGLE_DISTANCE_MATRIX_KEY = os.environ.get('GOOGLE_DISTANCE_MATRIX_KEY', '')
+
 # ─── SMS Settings ─────────────────────────────────────────────────────────────
 ADMIN_PHONE_NUMBER = '+918074691873'
 BAKERY_NAME = 'The Bake Story'
@@ -163,16 +169,20 @@ EMAIL_HOST_USER = os.environ.get('SMTP_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('SMTP_PASS', '')
 DEFAULT_FROM_EMAIL = os.environ.get('SMTP_USER', 'bandelaajay362@gmail.com')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
-EMAIL_NOTIFICATIONS_ENABLED = False
+EMAIL_NOTIFICATIONS_ENABLED = True
 
 # ─── Order Notification Settings ──────────────────────────────────────────────
 ORDER_NOTIFICATION_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
-ORDER_EMAIL_NOTIFICATIONS_ENABLED = False
+ORDER_EMAIL_NOTIFICATIONS_ENABLED = True
 ORDER_SMS_NOTIFICATIONS_ENABLED = False
 BAKERY_BUSINESS_NAME = 'The Bake Story'
 BAKERY_BUSINESS_PHONE = '8074691873'
 BAKERY_BUSINESS_ADDRESS = 'Chaitanyapuri, Dilsukhnagar, Hyderabad'
 BAKERY_BUSINESS_EMAIL = os.environ.get('ADMIN_EMAIL', 'btechmuthyam@gmail.com')
+
+# Bakery physical location (Chaitanyapuri, Dilsukhnagar, Hyderabad)
+BAKERY_LOCATION_LAT = float(os.environ.get('BAKERY_LAT', '17.3616'))
+BAKERY_LOCATION_LNG = float(os.environ.get('BAKERY_LNG', '78.5267'))
 
 # ─── CORS Settings ────────────────────────────────────────────────────────────
 CORS_ALLOW_CREDENTIALS = True

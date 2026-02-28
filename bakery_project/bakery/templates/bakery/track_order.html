@@ -1,0 +1,973 @@
+﻿{% extends 'bakery/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    * { box-sizing: border-box; }
+
+    .tracking-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 16px 60px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #d2691e;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 14px;
+        transition: opacity .2s;
+    }
+    .back-link:hover { opacity: 0.7; }
+
+    /* ── Main Grid ── */
+    .tracking-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 18px;
+        align-items: start;
+    }
+    @media (max-width: 860px) {
+        .tracking-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Map ── */
+    .map-container {
+        background: #1a1a2e;
+        border-radius: 18px;
+        overflow: hidden;
+        position: relative;
+        min-height: 560px;
+        box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .map-container #map { width: 100%; height: 100%; min-height: 560px; }
+
+    .live-pill {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        z-index: 10;
+        background: #111;
+        color: #4caf50;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 5px 14px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: .5px;
+    }
+    .live-dot {
+        width: 8px; height: 8px;
+        background: #4caf50;
+        border-radius: 50%;
+        animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+        0%,100% { opacity: 1; }
+        50% { opacity: .3; }
+    }
+
+    /* ── Right Panel ── */
+    .tracking-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    /* == Status Hero == */
+    .status-hero {
+        background: linear-gradient(135deg, #d2691e, #a0522d);
+        border-radius: 18px;
+        padding: 22px 24px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .status-hero::after {
+        content: '';
+        position: absolute;
+        top: -30px; right: -30px;
+        width: 100px; height: 100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.08);
+    }
+    .status-hero .status-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        opacity: .8;
+        margin-bottom: 6px;
+    }
+    .status-hero .status-text {
+        font-size: 22px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+    .status-hero .status-sub {
+        font-size: 13px;
+        opacity: .8;
+    }
+    .status-hero .eta-row {
+        display: flex;
+        gap: 14px;
+        margin-top: 16px;
+    }
+    .eta-box {
+        background: rgba(255,255,255,.15);
+        border-radius: 12px;
+        padding: 12px 16px;
+        flex: 1;
+        text-align: center;
+        backdrop-filter: blur(4px);
+    }
+    .eta-box .eta-val {
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+    .eta-box .eta-lbl {
+        font-size: 11px;
+        opacity: .75;
+        margin-top: 2px;
+    }
+
+    /* == Progress Timeline == */
+    .progress-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        padding: 18px 20px;
+    }
+    .progress-card h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 14px;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 11px; top: 6px; bottom: 6px;
+        width: 2px;
+        background: #e8ddd0;
+    }
+    .tl-step {
+        position: relative;
+        padding-bottom: 16px;
+    }
+    .tl-step:last-child { padding-bottom: 0; }
+    .tl-dot {
+        position: absolute;
+        left: -24px; top: 2px;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: #e8ddd0;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #e8ddd0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .3s;
+    }
+    .tl-dot i { font-size: 7px; color: white; display: none; }
+    .tl-step.done .tl-dot {
+        background: #4caf50;
+        box-shadow: 0 0 0 2px #4caf50;
+    }
+    .tl-step.done .tl-dot i { display: block; }
+    .tl-step.active .tl-dot {
+        background: #d2691e;
+        box-shadow: 0 0 0 2px #d2691e;
+        animation: tl-pulse 1.5s infinite;
+    }
+    @keyframes tl-pulse {
+        0%,100% { box-shadow: 0 0 0 2px #d2691e; }
+        50% { box-shadow: 0 0 0 7px rgba(210,105,30,.2); }
+    }
+    .tl-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+    }
+    .tl-step.pending .tl-label { color: #bbb; }
+    .tl-time {
+        font-size: 11px;
+        color: #aaa;
+        margin-top: 1px;
+    }
+
+    /* == Driver Card == */
+    .driver-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        padding: 18px;
+        border: 2px solid #d2691e;
+    }
+    .dc-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .driver-avatar {
+        width: 54px; height: 54px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d2691e, #cd853f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 22px;
+        font-weight: 700;
+        flex-shrink: 0;
+        border: 3px solid #d2691e;
+        position: relative;
+    }
+    .driver-avatar .online-dot {
+        position: absolute;
+        bottom: 2px; right: 2px;
+        width: 12px; height: 12px;
+        background: #4caf50;
+        border-radius: 50%;
+        border: 2px solid white;
+        animation: blink 1.2s infinite;
+    }
+    .dc-name { font-size: 16px; font-weight: 700; color: #333; }
+    .dc-role { font-size: 12px; color: #888; }
+    .dc-details { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .dc-row {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 13px; color: #555;
+    }
+    .dc-row i { width: 16px; color: #d2691e; text-align: center; }
+    .dc-actions {
+        display: flex; gap: 10px; margin-top: 16px;
+    }
+    .dc-actions a, .dc-actions button {
+        flex: 1;
+        padding: 11px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: all .2s;
+    }
+    .call-btn {
+        background: #d2691e;
+        color: white !important;
+    }
+    .call-btn:hover { background: #a0522d; }
+    .msg-btn {
+        background: white;
+        color: #d2691e;
+        border: 2px solid #d2691e;
+    }
+    .msg-btn:hover { background: #fdf6ee; }
+    .dc-live-tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 12px;
+        padding: 7px;
+        background: #fdf6ee;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #d2691e;
+    }
+    .dc-live-tag .ld {
+        width: 6px; height: 6px;
+        background: #4caf50;
+        border-radius: 50%;
+        animation: blink 1.2s infinite;
+    }
+
+    /* Finding driver */
+    .finding-driver {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        padding: 26px 20px;
+        text-align: center;
+    }
+    .finding-driver .search-icon {
+        font-size: 44px;
+        margin-bottom: 10px;
+        animation: bounce 1.5s infinite;
+    }
+    @keyframes bounce {
+        0%,100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+    .finding-driver h4 { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .finding-driver p { font-size: 13px; color: #888; }
+    .finding-driver .spinner {
+        margin-top: 12px;
+        display: inline-block;
+        width: 22px; height: 22px;
+        border: 3px solid #e8ddd0;
+        border-top-color: #d2691e;
+        border-radius: 50%;
+        animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* == Order Summary == */
+    .order-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        padding: 16px 18px;
+        border-left: 5px solid #d2691e;
+    }
+    .order-card h4 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .oc-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 13px;
+        color: #555;
+        border-bottom: 1px dashed #f0e0cc;
+    }
+    .oc-item:last-of-type { border-bottom: none; }
+    .oc-total {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 8px;
+        margin-top: 4px;
+        border-top: 2px solid #d2691e;
+        font-size: 15px;
+        font-weight: 700;
+        color: #d2691e;
+    }
+
+    /* Address card */
+    .address-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        padding: 14px 18px;
+    }
+    .address-card h4 { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .addr-row {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 8px 0;
+        font-size: 13px; color: #555;
+        border-bottom: 1px solid #f5ece0;
+    }
+    .addr-row:last-child { border-bottom: none; }
+    .addr-row i { color: #d2691e; margin-top: 2px; width: 14px; text-align: center; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tracking-page">
+    <a href="{% url 'order_detail' order.order_id %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Order Details
+    </a>
+
+    <div class="tracking-grid">
+        <!-- ═══ MAP ═══ -->
+        <div class="map-container">
+            <div class="live-pill">
+                <div class="live-dot"></div>
+                LIVE
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <!-- ═══ RIGHT PANEL ═══ -->
+        <div class="tracking-panel">
+
+            <!-- Status Hero -->
+            <div class="status-hero">
+                <div class="status-label">DELIVERY STATUS</div>
+                <div class="status-text" id="statusText">
+                    {% if order.status == 'pending' %}Order Received
+                    {% elif order.status == 'confirmed' %}Order Confirmed
+                    {% elif order.status == 'preparing' %}Being Prepared
+                    {% elif order.status == 'ready' %}Ready for Pickup
+                    {% elif order.status == 'picked_up' %}Picked Up
+                    {% elif order.status == 'on_the_way' %}On The Way &#x1F6F5;
+                    {% elif order.status == 'delivered' %}Delivered &#x2705;
+                    {% elif order.status == 'completed' %}Completed &#x2705;
+                    {% else %}{{ order.get_status_display }}{% endif %}
+                </div>
+                <div class="status-sub" id="statusSub">
+                    {% if order.status == 'on_the_way' %}Your order is on its way to you!
+                    {% elif order.status == 'picked_up' %}Driver has picked up your order
+                    {% elif order.status == 'ready' %}Waiting for driver to pick up
+                    {% elif order.status == 'preparing' %}Chef is preparing your food
+                    {% elif order.status == 'delivered' or order.status == 'completed' %}Your order has been delivered!
+                    {% else %}We'll keep you updated in real-time{% endif %}
+                </div>
+                <div class="eta-row">
+                    <div class="eta-box">
+                        <div class="eta-val" id="etaTime">--</div>
+                        <div class="eta-lbl">ETA (min)</div>
+                    </div>
+                    <div class="eta-box">
+                        <div class="eta-val" id="etaDist">--</div>
+                        <div class="eta-lbl">Distance</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Timeline -->
+            <div class="progress-card">
+                <h4><i class="fas fa-route" style="color:#d2691e;margin-right:6px;"></i>Order Progress</h4>
+                <div class="timeline" id="timeline">
+                    <div class="tl-step {% if order.status == 'pending' %}active{% else %}done{% endif %}" data-status="pending">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Order Placed</div>
+                        <div class="tl-time">{{ order.created_at|date:"g:i A" }}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'confirmed' %}active{% elif order.confirmed_at %}done{% else %}pending{% endif %}" data-status="confirmed">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Confirmed</div>
+                        <div class="tl-time">{% if order.confirmed_at %}{{ order.confirmed_at|date:"g:i A" }}{% else %}Waiting{% endif %}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'preparing' %}active{% elif order.status in 'ready,picked_up,on_the_way,delivered,completed' %}done{% else %}pending{% endif %}" data-status="preparing">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Preparing</div>
+                        <div class="tl-time">{% if order.status == 'preparing' %}In progress{% elif order.ready_at %}Done{% else %}Waiting{% endif %}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'ready' %}active{% elif order.status == 'picked_up' or order.status == 'on_the_way' or order.status == 'delivered' or order.status == 'completed' %}done{% else %}pending{% endif %}" data-status="ready">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Ready for Pickup</div>
+                        <div class="tl-time">{% if order.ready_at %}{{ order.ready_at|date:"g:i A" }}{% else %}Waiting{% endif %}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'picked_up' %}active{% elif order.status == 'on_the_way' or order.status == 'delivered' or order.status == 'completed' %}done{% else %}pending{% endif %}" data-status="picked_up">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Picked Up</div>
+                        <div class="tl-time">{% if order.picked_up_at %}{{ order.picked_up_at|date:"g:i A" }}{% else %}Waiting{% endif %}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'on_the_way' %}active{% elif order.status == 'delivered' or order.status == 'completed' %}done{% else %}pending{% endif %}" data-status="on_the_way">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">On The Way</div>
+                        <div class="tl-time">{% if order.status == 'on_the_way' %}En route{% elif order.status == 'delivered' or order.status == 'completed' %}Done{% else %}Waiting{% endif %}</div>
+                    </div>
+                    <div class="tl-step {% if order.status == 'delivered' or order.status == 'completed' %}done{% else %}pending{% endif %}" data-status="delivered">
+                        <div class="tl-dot"><i class="fas fa-check"></i></div>
+                        <div class="tl-label">Delivered</div>
+                        <div class="tl-time">{% if order.delivered_at %}{{ order.delivered_at|date:"g:i A" }}{% else %}Waiting{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Card -->
+            <div id="driverCardContainer">
+            {% if order.assigned_driver %}
+                <div class="driver-card" id="driverCard">
+                    <div class="dc-top">
+                        <div class="driver-avatar">
+                            {{ order.assigned_driver.first_name|first|default:"D" }}
+                            <div class="online-dot"></div>
+                        </div>
+                        <div>
+                            <div class="dc-name">{{ order.assigned_driver.first_name|default:"Driver" }} {{ order.assigned_driver.last_name|default:"" }}</div>
+                            <div class="dc-role">Your Delivery Partner</div>
+                        </div>
+                    </div>
+                    <div class="dc-details">
+                        {% if driver_info.phone %}
+                        <div class="dc-row"><i class="fas fa-phone"></i> {{ driver_info.phone }}</div>
+                        {% endif %}
+                        {% if driver_info.vehicle_number %}
+                        <div class="dc-row"><i class="fas fa-motorcycle"></i> {{ driver_info.vehicle_number }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="dc-actions">
+                        {% if driver_info.phone %}
+                        <a href="tel:{{ driver_info.phone }}" class="call-btn"><i class="fas fa-phone"></i>&nbsp;Call Driver</a>
+                        {% else %}
+                        <a href="#" class="call-btn" style="pointer-events:none;opacity:.6;"><i class="fas fa-phone"></i>&nbsp;Call Driver</a>
+                        {% endif %}
+                        <button class="msg-btn" onclick="alert('Chat feature coming soon!')"><i class="fas fa-comment"></i>&nbsp;Message</button>
+                    </div>
+                    <div class="dc-live-tag">
+                        <div class="ld"></div>
+                        Live tracking active
+                    </div>
+                </div>
+            {% else %}
+                <div class="finding-driver" id="findingDriver">
+                    <div class="search-icon">&#x1F50D;</div>
+                    <h4>Finding Delivery Partner</h4>
+                    <p>Looking for the best partner near the bakery...</p>
+                    <div class="spinner"></div>
+                </div>
+            {% endif %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-card">
+                <h4><i class="fas fa-shopping-bag" style="color:#d2691e;margin-right:6px;"></i>Order #{{ order.order_id }}</h4>
+                {% for item in order.items.all %}
+                <div class="oc-item">
+                    <span>{{ item.quantity }}x {{ item.menu_item.name }}</span>
+                    <span>&#8377;{{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+                <div class="oc-total">
+                    <span>Total</span>
+                    <span>&#8377;{{ order.grand_total }}</span>
+                </div>
+            </div>
+
+            <!-- Addresses -->
+            <div class="address-card">
+                <h4><i class="fas fa-map-pin" style="color:#d2691e;margin-right:6px;"></i>Delivery Route</h4>
+                <div class="addr-row">
+                    <i class="fas fa-store"></i>
+                    <div>
+                        <strong style="font-size:12px;color:#333;">Pickup &mdash; The Bake Story</strong><br>
+                        <span style="font-size:12px;color:#888;">Bakery Location</span>
+                    </div>
+                </div>
+                <div class="addr-row">
+                    <i class="fas fa-home"></i>
+                    <div>
+                        <strong style="font-size:12px;color:#333;">Drop-off</strong><br>
+                        <span style="font-size:12px;">{{ order.delivery_address }}</span>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /tracking-panel -->
+    </div><!-- /tracking-grid -->
+</div><!-- /tracking-page -->
+
+<!-- ═══════════════════════════════════════════
+     Google Maps + Real-Time Tracking JS
+     ═══════════════════════════════════════════ -->
+<script>
+    /* ── Constants ── */
+    const ORDER_ID = '{{ order.order_id }}';
+    let currentStatus = '{{ order.status }}';
+    const deliveryAddress = '{{ order.delivery_address|escapejs }}';
+    const BAKERY_LAT = {{ BAKERY_LAT }}, BAKERY_LNG = {{ BAKERY_LNG }};
+    const BAKERY_LOCATION = { lat: BAKERY_LAT, lng: BAKERY_LNG };
+
+    /* initial driver location passed from server */
+    const initialDriverLocation = {{ driver_location_json|safe }};
+
+    /* ── Map / Marker vars ── */
+    let map, driverMarker, destinationMarker, bakeryMarker;
+    let directionsRendererPickup, directionsRendererDropoff;
+    let destinationLatLng = null;
+    let currentDriverPos = initialDriverLocation
+        ? { lat: initialDriverLocation.lat, lng: initialDriverLocation.lng }
+        : { lat: BAKERY_LAT + (Math.random() - 0.5) * 0.008, lng: BAKERY_LNG + (Math.random() - 0.5) * 0.008 };
+    let animFrame = null;
+    let driverBearing = 0;
+
+    /* ── Scooter SVG marker (extrahand reference design) ── */
+    function getScooterSVG(bearing) {
+        const svg = `<svg width="68" height="68" viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="crispShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="1" dy="3" stdDeviation="2.5" flood-color="rgba(0,0,0,0.5)"/>
+            </filter>
+            <linearGradient id="premiumAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#d2691e"/>
+              <stop offset="100%" stop-color="#8b4513"/>
+            </linearGradient>
+            <radialGradient id="helmetShine" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stop-color="#ffe0b2" stop-opacity="0.8"/>
+              <stop offset="100%" stop-color="#d2691e" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g transform="rotate(${bearing} 34 34)" filter="url(#crispShadow)">
+            <rect x="24" y="44" width="20" height="15" rx="2" fill="url(#premiumAmber)" stroke="#6d3a0e" stroke-width="1"/>
+            <rect x="29" y="47" width="10" height="9" fill="white" rx="1" opacity="0.9"/>
+            <path d="M31 49 L34 52 L37 49" stroke="#d2691e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M28 22 L40 22 L42 46 L26 46 Z" fill="#333333"/>
+            <path d="M26 14 Q34 10 42 14 L40 24 L28 24 Z" fill="url(#premiumAmber)" stroke="#6d3a0e" stroke-width="0.5"/>
+            <rect x="31" y="12" width="6" height="4" rx="1" fill="#FEF3C7"/>
+            <line x1="18" y1="18" x2="26" y2="20" stroke="#333" stroke-width="1.5"/>
+            <circle cx="18" cy="18" r="2" fill="#111" stroke="#555" stroke-width="0.5"/>
+            <line x1="50" y1="18" x2="42" y2="20" stroke="#333" stroke-width="1.5"/>
+            <circle cx="50" cy="18" r="2" fill="#111" stroke="#555" stroke-width="0.5"/>
+            <path d="M18 20 L50 20" stroke="#111827" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="18" cy="20" r="2.5" fill="#000"/>
+            <circle cx="50" cy="20" r="2.5" fill="#000"/>
+            <ellipse cx="34" cy="34" rx="10" ry="9" fill="#202124"/>
+            <circle cx="34" cy="34" r="7" fill="#d2691e" stroke="#6d3a0e" stroke-width="1"/>
+            <circle cx="34" cy="34" r="7" fill="url(#helmetShine)"/>
+            <rect x="30" y="30" width="8" height="3" rx="1.5" fill="#111" opacity="0.8"/>
+            <path d="M26 34 Q22 30 20 20" stroke="#202124" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M42 34 Q46 30 48 20" stroke="#202124" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          </g>
+        </svg>`;
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
+
+    /* ── Bearing calculation ── */
+    function calcBearing(from, to) {
+        const lat1 = from.lat * Math.PI / 180, lng1 = from.lng * Math.PI / 180;
+        const lat2 = to.lat * Math.PI / 180, lng2 = to.lng * Math.PI / 180;
+        const dLng = lng2 - lng1;
+        const y = Math.sin(dLng) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+        return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+    }
+
+    /* ── Smooth marker LERP animation ── */
+    function animateMarkerTo(marker, newPos, durationMs) {
+        if (animFrame) cancelAnimationFrame(animFrame);
+        const startPos = { lat: marker.getPosition().lat(), lng: marker.getPosition().lng() };
+        const startTime = Date.now();
+
+        const bearing = calcBearing(startPos, newPos);
+        driverBearing = bearing;
+        marker.setIcon({
+            url: getScooterSVG(bearing),
+            scaledSize: new google.maps.Size(68, 68),
+            anchor: new google.maps.Point(34, 34)
+        });
+
+        function step() {
+            const t = Math.min((Date.now() - startTime) / durationMs, 1);
+            const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            const lat = startPos.lat + (newPos.lat - startPos.lat) * ease;
+            const lng = startPos.lng + (newPos.lng - startPos.lng) * ease;
+            marker.setPosition({ lat, lng });
+            if (t < 1) animFrame = requestAnimationFrame(step);
+        }
+        animFrame = requestAnimationFrame(step);
+    }
+
+    /* ── initMap callback ── */
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 14,
+            center: currentDriverPos,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true,
+            styles: [
+                { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+            ]
+        });
+
+        directionsRendererPickup = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true,
+            polylineOptions: {
+                strokeColor: '#2563eb',
+                strokeWeight: 8,
+                strokeOpacity: 1.0,
+                zIndex: 1
+            }
+        });
+
+        directionsRendererDropoff = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true,
+            polylineOptions: {
+                strokeColor: '#d2691e',
+                strokeWeight: 8,
+                strokeOpacity: 1.0,
+                zIndex: 2
+            }
+        });
+
+        /* Bakery marker */
+        bakeryMarker = new google.maps.Marker({
+            position: BAKERY_LOCATION,
+            map: map,
+            title: 'The Bake Story (Pickup)',
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38">' +
+                    '<circle cx="19" cy="19" r="16" fill="#d2691e" stroke="white" stroke-width="3"/>' +
+                    '<text x="19" y="25" text-anchor="middle" fill="white" font-size="17">&#x1F3EA;</text>' +
+                    '</svg>'
+                ),
+                scaledSize: new google.maps.Size(38, 38),
+                anchor: new google.maps.Point(19, 19)
+            },
+            zIndex: 2
+        });
+
+        /* Driver scooter marker */
+        driverMarker = new google.maps.Marker({
+            position: currentDriverPos,
+            map: map,
+            title: 'Delivery Partner',
+            icon: {
+                url: getScooterSVG(0),
+                scaledSize: new google.maps.Size(68, 68),
+                anchor: new google.maps.Point(34, 34)
+            },
+            zIndex: 10
+        });
+
+        /* Geocode delivery address */
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: deliveryAddress + ', Hyderabad, India' }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                destinationLatLng = results[0].geometry.location;
+
+                destinationMarker = new google.maps.Marker({
+                    position: destinationLatLng,
+                    map: map,
+                    title: 'Delivery Location',
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38">' +
+                            '<circle cx="19" cy="19" r="16" fill="#ef4444" stroke="white" stroke-width="3"/>' +
+                            '<text x="19" y="25" text-anchor="middle" fill="white" font-size="17">&#x1F3E0;</text>' +
+                            '</svg>'
+                        ),
+                        scaledSize: new google.maps.Size(38, 38),
+                        anchor: new google.maps.Point(19, 19)
+                    },
+                    zIndex: 2
+                });
+
+                /* Auto-fit bounds */
+                const bounds = new google.maps.LatLngBounds();
+                bounds.extend(BAKERY_LOCATION);
+                bounds.extend(destinationLatLng);
+                map.fitBounds(bounds, { top: 80, right: 40, bottom: 40, left: 40 });
+
+                /* Draw driving route with 2 legs: driver → bakery → customer */
+                drawRoute(currentDriverPos, destinationLatLng);
+            }
+        });
+
+        /* Start real-time polling */
+        startPolling();
+    }
+
+    /* ── Draw route with Directions API ── */
+    function drawRoute(origin, destination) {
+        const svc = new google.maps.DirectionsService();
+        const isPickedUp = currentStatus === 'picked_up' || currentStatus === 'on_the_way' || currentStatus === 'delivered';
+
+        if (isPickedUp) {
+            /* Already picked up: show single leg (driver → customer) */
+            directionsRendererPickup.setDirections({ routes: [] });
+            svc.route({
+                origin: origin,
+                destination: destination,
+                travelMode: 'DRIVING'
+            }, function(result, status) {
+                if (status === 'OK') {
+                    directionsRendererDropoff.setDirections(result);
+                    const leg = result.routes[0].legs[0];
+                    document.getElementById('etaTime').textContent = Math.round(leg.duration.value / 60);
+                    document.getElementById('etaDist').textContent = leg.distance.text;
+                }
+            });
+        } else {
+            /* Not picked up yet: show 2-leg route (driver → bakery, bakery → customer) */
+            /* Leg 1: driver → bakery */
+            svc.route({
+                origin: origin,
+                destination: BAKERY_LOCATION,
+                travelMode: 'DRIVING'
+            }, function(result, status) {
+                if (status === 'OK') {
+                    directionsRendererPickup.setDirections(result);
+                    const leg1 = result.routes[0].legs[0];
+
+                    /* Leg 2: bakery → customer */
+                    svc.route({
+                        origin: BAKERY_LOCATION,
+                        destination: destination,
+                        travelMode: 'DRIVING'
+                    }, function(result2, status2) {
+                        if (status2 === 'OK') {
+                            directionsRendererDropoff.setDirections(result2);
+                            const leg2 = result2.routes[0].legs[0];
+                            const totalMin = Math.round((leg1.duration.value + leg2.duration.value) / 60);
+                            const totalKm = ((leg1.distance.value + leg2.distance.value) / 1000).toFixed(1);
+                            document.getElementById('etaTime').textContent = totalMin;
+                            document.getElementById('etaDist').textContent = totalKm + ' km';
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    /* ── Update ETA from current driver position ── */
+    function updateETA(from) {
+        if (!destinationLatLng) return;
+        const svc = new google.maps.DirectionsService();
+        const isPickedUp = currentStatus === 'picked_up' || currentStatus === 'on_the_way' || currentStatus === 'delivered';
+
+        if (isPickedUp) {
+            /* Single leg: driver → customer */
+            svc.route({ origin: from, destination: destinationLatLng, travelMode: 'DRIVING' }, (result, status) => {
+                if (status === 'OK') {
+                    const leg = result.routes[0].legs[0];
+                    document.getElementById('etaTime').textContent = Math.round(leg.duration.value / 60);
+                    document.getElementById('etaDist').textContent = leg.distance.text;
+                }
+            });
+        } else {
+            /* 2-leg: driver → bakery, then bakery → customer */
+            svc.route({ origin: from, destination: BAKERY_LOCATION, travelMode: 'DRIVING' }, (result1, status1) => {
+                if (status1 === 'OK') {
+                    const leg1 = result1.routes[0].legs[0];
+                    svc.route({ origin: BAKERY_LOCATION, destination: destinationLatLng, travelMode: 'DRIVING' }, (result2, status2) => {
+                        if (status2 === 'OK') {
+                            const leg2 = result2.routes[0].legs[0];
+                            const totalMin = Math.round((leg1.duration.value + leg2.duration.value) / 60);
+                            const totalKm = ((leg1.distance.value + leg2.distance.value) / 1000).toFixed(1);
+                            document.getElementById('etaTime').textContent = totalMin;
+                            document.getElementById('etaDist').textContent = totalKm + ' km';
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    /* ── Status config map ── */
+    const STATUS_CFG = {
+        pending:    { text: 'Order Received',       sub: "We'll keep you updated in real-time" },
+        confirmed:  { text: 'Order Confirmed',       sub: 'Your order has been confirmed' },
+        preparing:  { text: 'Being Prepared',        sub: 'Chef is preparing your food' },
+        ready:      { text: 'Ready for Pickup',      sub: 'Waiting for driver to pick up' },
+        picked_up:  { text: 'Picked Up',             sub: 'Driver has picked up your order' },
+        on_the_way: { text: 'On The Way \uD83D\uDEF5', sub: 'Your order is on its way to you!' },
+        delivered:  { text: 'Delivered \u2705',      sub: 'Your order has been delivered!' },
+        completed:  { text: 'Completed \u2705',      sub: 'Thank you for your order!' },
+        cancelled:  { text: 'Cancelled',             sub: 'Your order has been cancelled' }
+    };
+
+    const STATUS_ORDER = ['pending','confirmed','preparing','ready','picked_up','on_the_way','delivered'];
+
+    function updateStatusUI(status, data) {
+        const cfg = STATUS_CFG[status] || { text: status, sub: '' };
+        document.getElementById('statusText').textContent = cfg.text;
+        document.getElementById('statusSub').textContent = cfg.sub;
+        currentStatus = status;
+
+        const currentIdx = STATUS_ORDER.indexOf(status);
+        document.querySelectorAll('.tl-step').forEach(function(step) {
+            const stepStatus = step.dataset.status;
+            const stepIdx = STATUS_ORDER.indexOf(stepStatus);
+            step.classList.remove('done', 'active', 'pending');
+            if (stepIdx < currentIdx) {
+                step.classList.add('done');
+            } else if (stepIdx === currentIdx) {
+                step.classList.add('active');
+            } else {
+                step.classList.add('pending');
+            }
+        });
+
+        /* Update timeline timestamps from data */
+        const tsMap = {
+            confirmed: data.confirmed_at,
+            ready: data.ready_at,
+            picked_up: data.picked_up_at,
+            delivered: data.delivered_at
+        };
+        Object.keys(tsMap).forEach(function(s) {
+            if (tsMap[s]) {
+                const step = document.querySelector('.tl-step[data-status="' + s + '"]');
+                if (step) {
+                    const timeEl = step.querySelector('.tl-time');
+                    const d = new Date(tsMap[s]);
+                    timeEl.textContent = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                }
+            }
+        });
+    }
+
+    function renderDriverCard(driver) {
+        const container = document.getElementById('driverCardContainer');
+        const phone = driver.phone || '';
+        const callBtn = phone
+            ? '<a href="tel:' + phone + '" class="call-btn"><i class="fas fa-phone"></i>&nbsp;Call Driver</a>'
+            : '<a href="#" class="call-btn" style="pointer-events:none;opacity:.6;"><i class="fas fa-phone"></i>&nbsp;Call Driver</a>';
+        container.innerHTML = '<div class="driver-card" id="driverCard">' +
+            '<div class="dc-top">' +
+            '<div class="driver-avatar">' + (driver.initial || driver.name.charAt(0).toUpperCase()) +
+            '<div class="online-dot"></div></div>' +
+            '<div><div class="dc-name">' + driver.name + '</div>' +
+            '<div class="dc-role">Your Delivery Partner</div></div></div>' +
+            '<div class="dc-details">' +
+            (phone ? '<div class="dc-row"><i class="fas fa-phone"></i> ' + phone + '</div>' : '') +
+            (driver.vehicle_number ? '<div class="dc-row"><i class="fas fa-motorcycle"></i> ' + driver.vehicle_number + '</div>' : '') +
+            '</div><div class="dc-actions">' + callBtn +
+            '<button class="msg-btn" onclick="alert(\'Chat feature coming soon!\')"><i class="fas fa-comment"></i>&nbsp;Message</button>' +
+            '</div><div class="dc-live-tag"><div class="ld"></div>Live tracking active</div></div>';
+    }
+
+    /* ── Main polling loop ── */
+    let pollTimer = null;
+
+    function startPolling() {
+        pollOnce();
+        pollTimer = setInterval(pollOnce, 4000);
+    }
+
+    async function pollOnce() {
+        try {
+            const resp = await fetch('/api/tracking/' + ORDER_ID + '/');
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (!data.success) return;
+
+            /* Status update */
+            if (data.status && data.status !== currentStatus) {
+                updateStatusUI(data.status, data);
+                /* Stop polling once delivered */
+                if (data.status === 'delivered' || data.status === 'completed') {
+                    clearInterval(pollTimer);
+                }
+            }
+
+            /* Driver location update */
+            if (data.driver_location) {
+                const newPos = { lat: data.driver_location.lat, lng: data.driver_location.lng };
+                const posDiff = Math.abs(newPos.lat - currentDriverPos.lat) + Math.abs(newPos.lng - currentDriverPos.lng);
+                if (posDiff > 0.000005) {
+                    animateMarkerTo(driverMarker, newPos, 2500);
+                    currentDriverPos = newPos;
+                    updateETA(newPos);
+                }
+            }
+
+            /* Driver card (if newly assigned) */
+            if (data.driver && !document.getElementById('driverCard')) {
+                renderDriverCard(data.driver);
+            }
+
+        } catch (e) {
+            /* silent fail — keep polling */
+        }
+    }
+</script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY|default:'AIzaSyCJvjpt_gZpTbMXxHYK5qIXeQE-VfumNY8' }}&libraries=places&callback=initMap">
+</script>
+{% endblock %}

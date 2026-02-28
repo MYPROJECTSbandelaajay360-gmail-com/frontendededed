@@ -1,11 +1,13 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - thebakestory</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -192,8 +194,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .live-indicator span {
@@ -636,6 +645,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard">
         <!-- Sidebar -->
@@ -657,38 +667,34 @@
 
             <div class="nav-section">
                 <div class="nav-label">Main Menu</div>
-                <a href="/dashboard/" class="nav-item active">
+                <a href="{% url 'admin_dashboard' %}" class="nav-item active">
                     <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
+                    <span>Admin Dashboard</span>
                 </a>
-                <a href="/kitchen/" class="nav-item">
+                <a href="{% url 'kitchen_portal' %}" class="nav-item">
                     <i class="fas fa-utensils"></i>
                     <span>Kitchen Portal</span>
                 </a>
-                <a href="/menu/" class="nav-item">
+                <a href="{% url 'menu_management' %}" class="nav-item">
                     <i class="fas fa-book-open"></i>
                     <span>Menu Management</span>
                 </a>
-                <a href="/admin/" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
+                <a href="{% url 'payment_management' %}" class="nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="{% url 'user_management' %}" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                </a>
+                <a href="{% url 'role_management' %}" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Role Management</span>
                 </a>
             </div>
 
             <div class="nav-section">
-                <div class="nav-label">Quick Actions</div>
-                <a href="/qr-landing/" class="nav-item">
-                    <i class="fas fa-qrcode"></i>
-                    <span>QR Codes</span>
-                </a>
-                <a href="/orders/" class="nav-item">
-                    <i class="fas fa-receipt"></i>
-                    <span>All Orders</span>
-                </a>
-            </div>
-
-            <div class="nav-section">
-                <a href="/logout/" class="nav-item">
+                <a href="{% url 'logout' %}" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </a>
@@ -793,11 +799,11 @@
             try {
                 const response = await fetch('/api/admin/stats/');
                 const data = await response.json();
-                
+
                 // Update revenue with trend
                 const revenueCard = document.querySelector('.stat-card.revenue');
                 revenueCard.querySelector('.stat-value').textContent = '$' + data.today_revenue.toFixed(2);
-                
+
                 const revenueChange = revenueCard.querySelector('.stat-change span');
                 const revenueIcon = revenueCard.querySelector('.stat-change i');
                 if (data.revenue_change > 0) {
@@ -811,18 +817,18 @@
                 } else {
                     revenueChange.textContent = `Same as yesterday ($${data.yesterday_revenue.toFixed(2)})`;
                 }
-                
+
                 // Update active orders
                 document.querySelector('.stat-card.orders .stat-value').textContent = data.active_orders_count;
-                
+
                 // Update completed orders
                 const completedCard = document.querySelector('.stat-card.completed');
                 completedCard.querySelector('.stat-value').textContent = data.completed_today;
                 completedCard.querySelector('.stat-change span').textContent = `${data.total_today} total orders today`;
-                
+
                 // Update avg time
                 document.querySelector('.stat-card.avg-time .stat-value').textContent = data.avg_time;
-                
+
                 // Update orders table
                 updateOrdersTable(data.orders);
             } catch (error) {
@@ -832,7 +838,7 @@
 
         function updateOrdersTable(orders) {
             const container = document.querySelector('.orders-section');
-            
+
             if (orders.length === 0) {
                 container.innerHTML = `
                     <div class="section-header">
@@ -883,7 +889,7 @@
             orders.forEach(order => {
                 const itemsCount = order.items.length;
                 const itemsList = order.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
-                
+
                 tableHTML += `
                     <tr data-status="${order.status}">
                         <td><span class="order-id">#${order.order_id}</span></td>
@@ -922,7 +928,7 @@
                 tab.classList.remove('active');
             });
             event.target.classList.add('active');
-            
+
             // Filter table rows
             const rows = document.querySelectorAll('.orders-table tbody tr');
             rows.forEach(row => {
@@ -941,4 +947,5 @@
         setInterval(fetchDashboardStats, 10000);
     </script>
 </body>
+
 </html>

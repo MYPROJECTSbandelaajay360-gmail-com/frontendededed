@@ -1,0 +1,850 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Driver Panel - TheBakeStory{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ═══════════════════════════════════════════════════════════
+           DRIVER PANEL BASE LAYOUT — Industrial Standard
+           ═══════════════════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #e8590c;
+            --primary-dark: #c2410c;
+            --primary-light: #fed7aa;
+            --primary-bg: #fff7ed;
+            --sidebar-width: 240px;
+            --header-height: 64px;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --success-bg: #dcfce7;
+            --warning: #ea580c;
+            --warning-bg: #fff7ed;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --info: #2563eb;
+            --info-bg: #eff6ff;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── SIDEBAR ────────────────────────────────────────────── */
+        .driver-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .sidebar-brand h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .sidebar-brand span {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 8px 12px 8px;
+            margin-top: 8px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 16px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .sidebar-link:hover {
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+
+        .sidebar-link.active {
+            background: var(--primary-bg);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            bottom: 6px;
+            width: 3px;
+            background: var(--primary);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .sidebar-link .badge-count {
+            margin-left: auto;
+            background: var(--primary);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: var(--primary-bg);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-dot.offline {
+            background: #94a3b8;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ── TOP HEADER ─────────────────────────────────────────── */
+        .driver-header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: var(--header-height);
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 99;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary);
+        }
+
+        .breadcrumb .separator {
+            font-size: 11px;
+        }
+
+        .breadcrumb .current {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .header-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .header-btn .notif-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 18px;
+            height: 18px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--card);
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 12px 6px 6px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .header-user:hover {
+            border-color: var(--primary);
+        }
+
+        .header-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .header-user-info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .header-user-info span {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .header-logout {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .header-logout:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+
+        /* ── MAIN CONTENT ───────────────────────────────────────── */
+        .driver-main {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 28px;
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* ── TOAST NOTIFICATIONS ────────────────────────────────── */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            animation: toast-in 0.3s ease;
+            max-width: 380px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .toast-error {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .toast-info {
+            background: var(--info);
+            color: #fff;
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateX(60px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ── MOBILE RESPONSIVE ──────────────────────────────────── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 99;
+        }
+
+        @media (max-width: 768px) {
+            .driver-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .driver-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .driver-header {
+                left: 0;
+            }
+
+            .driver-main {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        /* ── UTILITY CLASSES ────────────────────────────────────── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-body {
+            padding: 22px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            line-height: 1;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-confirmed {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .badge-preparing {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .badge-ready {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-served {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .badge-completed {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-cancelled {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-4 {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+
+            .grid-4,
+            .grid-3,
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .driver-main {
+                padding: 16px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="driver-sidebar" id="driverSidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <div>
+                <h2>Driver Panel</h2>
+                <span>TheBakeStory</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-label">Main Menu</div>
+            <a href="{% url 'driver_dashboard' %}"
+                class="sidebar-link {% if page_title == 'Dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{% url 'driver_orders' %}" class="sidebar-link {% if page_title == 'Orders' %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i> Orders
+                {% if pending_count %}<span class="badge-count">{{ pending_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'driver_map' %}" class="sidebar-link {% if page_title == 'Map' %}active{% endif %}">
+                <i class="fas fa-map-marker-alt"></i> Map
+            </a>
+
+            <div class="sidebar-nav-label">Finance</div>
+            <a href="{% url 'driver_earnings' %}"
+                class="sidebar-link {% if page_title == 'Earnings' %}active{% endif %}">
+                <i class="fas fa-wallet"></i> Earnings
+            </a>
+
+            <div class="sidebar-nav-label">Account</div>
+            <a href="{% url 'driver_settings' %}"
+                class="sidebar-link {% if page_title == 'Settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-status" id="availabilityStatus">
+                <span>
+                    <span class="status-dot {% if profile.is_available %}online{% else %}offline{% endif %}"
+                        id="statusDot"></span>
+                    <span id="statusText">{% if profile.is_available %}Online{% else %}Offline{% endif %}</span>
+                </span>
+                <label style="position:relative;width:44px;height:24px;cursor:pointer;">
+                    <input type="checkbox" id="availabilityToggle" {% if profile.is_available %}checked{% endif %}
+                        style="display:none;" onchange="toggleAvailability()">
+                    <span
+                        style="position:absolute;inset:0;background:{% if profile.is_available %}var(--success){% else %}#cbd5e1{% endif %};border-radius:12px;transition:0.3s;"
+                        id="toggleTrack"></span>
+                    <span
+                        style="position:absolute;top:2px;left:{% if profile.is_available %}22px{% else %}2px{% endif %};width:20px;height:20px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"
+                        id="toggleKnob"></span>
+                </label>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TOP HEADER -->
+    <header class="driver-header">
+        <div class="header-left">
+            <button class="mobile-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="breadcrumb">
+                <a href="{% url 'driver_dashboard' %}"><i class="fas fa-home"></i></a>
+                <span class="separator"><i class="fas fa-chevron-right"></i></span>
+                <span class="current">{{ page_title|default:"Dashboard" }}</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="header-btn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                {% if pending_count %}<span class="notif-badge">{{ pending_count }}</span>{% endif %}
+            </button>
+            <a href="{% url 'driver_settings' %}" class="header-user">
+                <div class="header-avatar">{{ user.first_name|first|upper|default:"D" }}</div>
+                <div class="header-user-info">
+                    <h4>{{ user.first_name|default:user.username }}</h4>
+                    <span>Driver</span>
+                </div>
+            </a>
+            <a href="{% url 'logout' %}" class="header-logout">Logout</a>
+        </div>
+    </header>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer">
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            class="toast toast-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+            <i
+                class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="driver-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // ── Sidebar Toggle (mobile) ──
+        function toggleSidebar() {
+            document.getElementById('driverSidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // ── Availability Toggle ──
+        function toggleAvailability() {
+            const csrfToken = '{{ csrf_token }}';
+            fetch('{% url "driver_toggle_availability" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({}),
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const dot = document.getElementById('statusDot');
+                        const text = document.getElementById('statusText');
+                        const track = document.getElementById('toggleTrack');
+                        const knob = document.getElementById('toggleKnob');
+                        if (data.is_available) {
+                            dot.className = 'status-dot online';
+                            text.textContent = 'Online';
+                            track.style.background = 'var(--success)';
+                            knob.style.left = '22px';
+                        } else {
+                            dot.className = 'status-dot offline';
+                            text.textContent = 'Offline';
+                            track.style.background = '#cbd5e1';
+                            knob.style.left = '2px';
+                        }
+                        showToast(data.is_available ? 'You are now Online' : 'You are now Offline', 'success');
+                    }
+                })
+                .catch(err => showToast('Failed to toggle status', 'error'));
+        }
+
+        // ── Toast helper ──
+        function showToast(msg, type) {
+            const container = document.getElementById('toastContainer');
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        // ── Auto-dismiss server toasts ──
+        document.querySelectorAll('.toast').forEach(t => {
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        });
+
+        // ── Update order status helper ──
+        function updateOrderStatus(orderId, action) {
+            const csrfToken = '{{ csrf_token }}';
+            fetch('{% url "driver_update_status" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ order_id: orderId, action: action }),
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(`Order ${orderId} updated: ${data.new_status}`, 'success');
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        showToast(data.error || 'Update failed', 'error');
+                    }
+                })
+                .catch(err => showToast('Network error', 'error'));
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

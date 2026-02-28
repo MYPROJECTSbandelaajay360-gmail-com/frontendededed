@@ -191,6 +191,16 @@
         color: #c62828;
     }
 
+    .s-picked_up {
+        background: #fff3e0;
+        color: #e65100;
+    }
+
+    .s-on_the_way {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
     .s-delivered {
         background: #e8f5e9;
         color: #2e7d32;
@@ -313,6 +323,28 @@
         font-size: 10px;
     }
 
+    /* small track button used on order cards */
+    .track-btn-small {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #d2691e;
+        color: white;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .2s;
+        cursor: pointer;
+        margin-top: 7px;
+    }
+    .track-btn-small:hover {
+        background: #8b4513;
+    }
+
+
+
     /* Empty state */
     .empty-state {
         grid-column: 1/-1;
@@ -430,7 +462,7 @@
         <div class="orders-grid">
             {% if current_orders %}
             {% for order in current_orders %}
-            <a href="{% url 'order_detail' order.order_id %}" class="o-card-link">
+            <div class="o-card-link" onclick="window.location.href='{% url 'order_detail' order.order_id %}'" style="cursor:pointer;">
                 <div class="o-card">
                     <!-- Top -->
                     <div class="o-card-top">
@@ -447,9 +479,9 @@
                         <div class="o-item">
                             {% if item.menu_item.image_url %}
                             <img src="{{ item.menu_item.image_url }}" alt="{{ item.menu_item.name }}"
-                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞'">
+                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=B'">
                             {% else %}
-                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞"
+                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=B"
                                 alt="{{ item.menu_item.name }}">
                             {% endif %}
                             <span class="iname">{{ item.menu_item.name }}</span>
@@ -458,8 +490,7 @@
                         </div>
                         {% endfor %}
                         {% if order.items.count > 3 %}
-                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more
-                            item(s)</div>
+                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more item(s)</div>
                         {% endif %}
                     </div>
 
@@ -475,10 +506,15 @@
                             Payment: {{ order.payment.get_payment_status_display }}
                         </span>
                         {% endif %}
+                        {% if order.order_type == 'delivery' and order.status != 'cancelled' %}
+                        <span class="track-btn-small" onclick="event.stopPropagation();window.location.href='{% url 'track_order' order.order_id %}'">
+                            <i class="fas fa-location-arrow"></i> Track Order
+                        </span>
+                        {% endif %}
                         <div class="view-hint">View Details <i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
-            </a>
+            </div>
             {% endfor %}
             {% else %}
             <div class="empty-state">
@@ -496,7 +532,7 @@
         <div class="orders-grid">
             {% if order_history %}
             {% for order in order_history %}
-            <a href="{% url 'order_detail' order.order_id %}" class="o-card-link">
+            <div class="o-card-link" onclick="window.location.href='{% url 'order_detail' order.order_id %}'" style="cursor:pointer;">
                 <div class="o-card history">
                     <!-- Top -->
                     <div class="o-card-top">
@@ -513,9 +549,9 @@
                         <div class="o-item">
                             {% if item.menu_item.image_url %}
                             <img src="{{ item.menu_item.image_url }}" alt="{{ item.menu_item.name }}"
-                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞'">
+                                onerror="this.src='https://via.placeholder.com/40x40/fdf6ee/d2691e?text=B'">
                             {% else %}
-                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=🍞"
+                            <img src="https://via.placeholder.com/40x40/fdf6ee/d2691e?text=B"
                                 alt="{{ item.menu_item.name }}">
                             {% endif %}
                             <span class="iname">{{ item.menu_item.name }}</span>
@@ -524,8 +560,7 @@
                         </div>
                         {% endfor %}
                         {% if order.items.count > 3 %}
-                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more
-                            item(s)</div>
+                        <div style="font-size:11px;color:#aaa;padding:5px 0;">+{{ order.items.count|add:"-3" }} more item(s)</div>
                         {% endif %}
                     </div>
 
@@ -548,7 +583,7 @@
                         <div class="view-hint">View Details <i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
-            </a>
+            </div>
             {% endfor %}
             {% else %}
             <div class="empty-state">
